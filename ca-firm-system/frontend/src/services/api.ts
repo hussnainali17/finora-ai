@@ -1,7 +1,5 @@
 import type { ReadinessResponse } from '../types/health';
-
-// Public, non-secret setting. All privileged calls go through the backend.
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1';
+import { API_BASE_URL } from './http';
 
 export async function fetchReadiness(signal?: AbortSignal): Promise<ReadinessResponse> {
   const resp = await fetch(`${API_BASE_URL}/health/ready`, { signal });

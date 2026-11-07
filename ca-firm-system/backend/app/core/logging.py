@@ -8,6 +8,8 @@ from datetime import UTC, datetime
 from typing import Any
 
 correlation_id_var: ContextVar[str | None] = ContextVar("correlation_id", default=None)
+# Remote address of the current request (recorded on audit events).
+client_ip_var: ContextVar[str | None] = ContextVar("client_ip", default=None)
 
 _RESERVED = set(logging.LogRecord("", 0, "", 0, "", (), None).__dict__) | {"message", "asctime"}
 

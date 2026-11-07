@@ -12,4 +12,13 @@
 | 8 | Stdlib health server in worker | No extra dependency; Kafka libs arrive in Phase 5. |
 | 9 | Ruff + mypy (strict) / ESLint + Prettier + tsc / pytest + Vitest | Quality gates from day one. |
 | 10 | MinIO bucket created with versioning enabled | Supports the "original files are immutable" rule from Phase 2. |
-| 11 | Auth, DB models and migrations deferred | Phase 1. |
+| 11 | ~~Auth, DB models and migrations deferred~~ | Implemented in Phase 1 (decisions 12-20). |
+| 12 | SQLAlchemy 2 async + Alembic (hand-written migration, `alembic check` in tests) | Matches the FastAPI/asyncpg stack; migration/model drift fails CI. |
+| 13 | Self-contained JWT auth (access token + rotating HttpOnly refresh cookie), not Keycloak yet | Roadmap permits either; avoids a heavy service for now. Seam documented in `core/security.py` so OIDC can replace it. |
+| 14 | Roles/permissions read from the DB on every request, not stored in the JWT; token carries a session id | Role changes, deactivation, logout and access revocation apply immediately. Cost: one indexed query per request. |
+| 15 | Isolation = scoped service layer + composite `(id, firm_id)` FKs + tests; **no Postgres RLS yet** | RLS needs per-request `SET LOCAL` plumbing and a non-owner DB role; deferred to Phase 11 as an additional layer. |
+| 16 | Out-of-scope resources return 404, missing permission returns 403 | Does not disclose other firms'/clients' existence. |
+| 17 | Roles are global system roles (one per user), not per-firm editable | Simplest model that meets the four roles required. Custom roles would be a later migration. |
+| 18 | Emails are globally unique | One login maps to exactly one firm. A firm admin creating an email used by another firm gets a 409 (minor existence disclosure; accepted). |
+| 19 | Audit log is append-only via DB triggers; events written in the same transaction | Tamper resistance and atomicity with the change. Hash-chaining/export is a Phase 11 item. |
+| 20 | No sign-up endpoint; first firm/admin via `python -m app.cli bootstrap-firm` | Removes an unauthenticated account-creation attack surface. |

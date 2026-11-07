@@ -12,6 +12,7 @@ from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PLACEHOLDER_MARKER = "CHANGE_ME"
+MIN_JWT_SECRET_LENGTH = 32
 
 
 class Settings(BaseSettings):
@@ -36,8 +37,31 @@ class Settings(BaseSettings):
 
     health_check_timeout_seconds: float = 3.0
 
+    # --- Authentication (Phase 1) -------------------------------------------
+    # HS256 signing key for access tokens. Server-side only; >= 32 chars.
+    jwt_secret: SecretStr
+    jwt_issuer: str = "ca-firm-system"
+    jwt_audience: str = "ca-firm-api"
+    access_token_ttl_minutes: int = Field(default=15, ge=1, le=60)
+    refresh_token_ttl_days: int = Field(default=7, ge=1, le=30)
+    # Cookie `Secure` flag. Must be true in staging/production (enforced below).
+    cookie_secure: bool = False
+    login_max_failed_attempts: int = Field(default=5, ge=3, le=20)
+    login_lockout_minutes: int = Field(default=15, ge=1, le=1440)
+
+    @property
+    def async_database_url(self) -> str:
+        """SQLAlchemy async URL derived from DATABASE_URL (asyncpg driver)."""
+        url = self.database_url.get_secret_value()
+        for prefix in ("postgresql://", "postgres://"):
+            if url.startswith(prefix):
+                return "postgresql+asyncpg://" + url[len(prefix) :]
+        return url
+
     @model_validator(mode="after")
-    def _reject_placeholder_secrets_outside_local(self) -> "Settings":
+    def _validate_secrets_and_cookie_policy(self) -> "Settings":
+        if len(self.jwt_secret.get_secret_value()) < MIN_JWT_SECRET_LENGTH:
+            raise ValueError(f"JWT_SECRET must be at least {MIN_JWT_SECRET_LENGTH} characters")
         if self.app_env in ("staging", "production"):
             secrets = {
                 "DATABASE_URL": self.database_url,
@@ -45,12 +69,15 @@ class Settings(BaseSettings):
                 "MINIO_ACCESS_KEY": self.minio_access_key,
                 "MINIO_SECRET_KEY": self.minio_secret_key,
                 "LITELLM_API_KEY": self.litellm_api_key,
+                "JWT_SECRET": self.jwt_secret,
             }
             bad = [k for k, v in secrets.items() if PLACEHOLDER_MARKER in v.get_secret_value()]
             if bad:
                 raise ValueError(
                     f"Placeholder secret values are not allowed in {self.app_env}: {bad}"
                 )
+            if not self.cookie_secure:
+                raise ValueError(f"COOKIE_SECURE must be true in {self.app_env}")
         return self
 
 

@@ -1,4 +1,4 @@
-# Architecture (Phase 0)
+# Architecture (Phase 0 + Phase 1)
 
 The CA Firm System is an **accounting review and financial reporting platform**. Clients keep their own books;
 this system imports their exports, reviews and reconciles them, proposes adjustments (kept separate until CA
@@ -23,6 +23,14 @@ Browser ──> Nginx :8080 ──> /      Frontend (React + MUI, Vite dev serve
   Phase 0; a scoped virtual key from Phase 4).
 - Kafka = async transport; LangGraph (Phase 9) = workflow state. Neither replaces the other.
 - Empty package skeletons (`agents/`, `accounting/`, `workflows/`, ...) mark where later phases land.
+
+## Identity and tenancy (Phase 1)
+- Request flow: `Bearer token -> get_principal (DB lookup of user/role/session) -> route permission check ->
+  service (re-checks permission, scopes every query by firm and client assignment) -> audit event in the
+  same transaction`.
+- Full schema, authorization matrix and auth design: [database-design.md](database-design.md);
+  endpoints: [api-contracts.md](api-contracts.md).
+- Migrations run as a one-shot `migrate` container; the backend waits for it.
 
 ## Health model
 - `GET /api/v1/health/live` - process is up (no dependency calls).
