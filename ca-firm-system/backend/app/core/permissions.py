@@ -32,6 +32,17 @@ PERMISSIONS: Final[dict[str, str]] = {
     "review:read": "View accounting review results, findings and reconciliation schedules",
     "review:manage": "Trigger accounting review runs and configure review settings",
     "review:resolve": "Update finding status (explained/resolved/escalated) and add reviewer notes",
+    # Phase 7 — Period-End Adjustments
+    "adjustment:read": "View proposed, approved, and rejected period-end adjustments",
+    "adjustment:propose": "Create and edit draft or proposed period-end adjustments",
+    "adjustment:approve": "Approve or reject period-end adjustments (CA reviewer authority)",
+    # Phase 8 — Financial Reporting & Validation
+    "report:read": "View financial reports, Adjusted Trial Balance, and validation outputs",
+    "report:generate": "Generate Adjusted Trial Balance and financial statements",
+    "report:sign_off": "Provide formal CA sign-off on final published reports",
+    # Phase 9 — LangGraph Workflows
+    "workflow:read": "View end-to-end workflow execution state and history",
+    "workflow:execute": "Trigger, pause, or resume end-to-end agent workflows",
 }
 
 FIRM_ADMIN = "firm_admin"
@@ -70,6 +81,14 @@ ROLES: Final[dict[str, tuple[str, str, frozenset[str]]]] = {
                 "review:read",
                 "review:manage",
                 "review:resolve",
+                "adjustment:read",
+                "adjustment:propose",
+                "adjustment:approve",
+                "report:read",
+                "report:generate",
+                "report:sign_off",
+                "workflow:read",
+                "workflow:execute",
             }
         ),
     ),
@@ -90,13 +109,30 @@ ROLES: Final[dict[str, tuple[str, str, frozenset[str]]]] = {
                 "llm:read",
                 "review:read",
                 "review:resolve",
+                "adjustment:read",
+                "adjustment:propose",
+                "report:read",
+                "report:generate",
+                "workflow:read",
+                "workflow:execute",
             }
         ),
     ),
     CLIENT_USER: (
         "Read-only Client User",
         "Client-portal user: read-only access to assigned clients only.",
-        frozenset({"client:read", "period:read", "document:read", "extraction:read", "review:read"}),
+        frozenset(
+            {
+                "client:read",
+                "period:read",
+                "document:read",
+                "extraction:read",
+                "review:read",
+                "adjustment:read",
+                "report:read",
+                "workflow:read",
+            }
+        ),
     ),
 }
 

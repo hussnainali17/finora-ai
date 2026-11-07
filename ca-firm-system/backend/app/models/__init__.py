@@ -8,6 +8,7 @@ from app.models.accounting_review import (
     ReviewFinding,
     ReviewRun,
 )
+from app.models.adjustments import PeriodAdjustment
 from app.models.audit import AuditEvent
 from app.models.documents import Document, OutboxEvent
 from app.models.extraction import (
@@ -35,8 +36,11 @@ from app.models.llm import (
     LlmModelSetting,
     LlmTaskOverride,
 )
+from app.models.reporting import AccountMapping, FinancialReport
+from app.models.workflows import WorkflowRun
 
 __all__ = [
+    "AccountMapping",
     "AccountingPeriod",
     "AuditEvent",
     "Client",
@@ -46,6 +50,7 @@ __all__ = [
     "ExtractedRow",
     "ExtractedTable",
     "ExtractionRun",
+    "FinancialReport",
     "Firm",
     "LlmAgentConfig",
     "LlmCallLog",
@@ -53,6 +58,7 @@ __all__ = [
     "LlmModelSetting",
     "LlmTaskOverride",
     "OutboxEvent",
+    "PeriodAdjustment",
     "Permission",
     "ReconciliationSchedule",
     "RefreshToken",
@@ -62,4 +68,5 @@ __all__ = [
     "RolePermission",
     "User",
     "UserClientAccess",
+    "WorkflowRun",
 ]

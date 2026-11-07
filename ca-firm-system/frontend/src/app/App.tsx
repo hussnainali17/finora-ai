@@ -18,6 +18,9 @@ import HomePage from '../features/home/HomePage';
 import ModelSettingsPage from '../features/model-settings/ModelSettingsPage';
 import { AccountingReviewPage } from '../features/accounting-review/AccountingReviewPage';
 import { FindingsPage } from '../features/accounting-review/FindingsPage';
+import { AdjustmentsPage } from '../features/adjustments/AdjustmentsPage';
+import { ReportingPage } from '../features/reporting/ReportingPage';
+import { WorkflowBoardPage } from '../features/workflows/WorkflowBoardPage';
 
 function Shell() {
   const { state, logout, can } = useAuth();
@@ -73,6 +76,18 @@ function Shell() {
           <Route
             path="/clients/:clientId/periods/:periodId/review/:reviewRunId/findings"
             element={can('review:read') ? <FindingsPage /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/clients/:clientId/periods/:periodId/adjustments"
+            element={can('adjustment:read') ? <AdjustmentsPage /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/clients/:clientId/periods/:periodId/reports"
+            element={can('report:read') ? <ReportingPage /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/clients/:clientId/periods/:periodId/workflows"
+            element={can('workflow:read') ? <WorkflowBoardPage /> : <Navigate to="/" replace />}
           />
           <Route
             path="/settings/models"

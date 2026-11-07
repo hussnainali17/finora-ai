@@ -140,3 +140,30 @@ Firm Admin: whole firm. Others with the permission: only events tied to their as
 | `PATCH /{review_run_id}/findings/{finding_id}` `{status, reviewer_note?}` | `review:resolve` | 200 `ReviewFindingOut`. Status transitions: `open` -> `explained` -> `resolved` / `escalated`. |
 | `GET /{review_run_id}/schedules` | `review:read` | `list[ReconciliationScheduleOut]`. All schedules generated during the run (e.g. AR ageing, bank recon). |
 | `GET /{review_run_id}/schedules/{schedule_id}` | `review:read` | `ReconciliationScheduleOut`. Detailed data payload of a specific schedule. |
+
+## Period-End Adjustments (Phase 7) - `/clients/{client_id}/periods/{period_id}/adjustments`
+| Method & path | Permission | Notes |
+|---|---|---|
+| `GET /?status&category&limit&offset` | `adjustment:read` | `AdjustmentListOut`. Filter by status (draft, proposed, approved, rejected) and category. |
+| `POST /generate` | `adjustment:propose` | 201 `list[PeriodAdjustmentOut]`. Triggers Agent 3 to calculate proposed depreciation, prepayments, accruals, and provisions. |
+| `POST /` `{category, debit_account_code, ..., amount, rationale}` | `adjustment:propose` | 201 `PeriodAdjustmentOut`. Manually propose an adjustment. |
+| `GET /{adjustment_id}` | `adjustment:read` | `PeriodAdjustmentOut`. Includes immutable calculation breakdown and audit history. |
+| `PATCH /{adjustment_id}` `{amount?, debit_account_code?, ...}` | `adjustment:propose` | 200 `PeriodAdjustmentOut`. Version is bumped. If previously approved, approval is invalidated! |
+| `POST /{adjustment_id}/decision` `{decision: approved\|rejected, comments?}` | `adjustment:approve` | 200 `PeriodAdjustmentOut`. Formal CA review decision. Only approved adjustments feed reporting. |
+
+## Financial Reporting & Validation (Phase 8) - `/clients/{client_id}/periods/{period_id}/reports`
+| Method & path | Permission | Notes |
+|---|---|---|
+| `POST /generate` `{currency?}` | `report:generate` | 201. Generates Adjusted Trial Balance (Original TB + Approved Adjustments ONLY), Balance Sheet, P&L, Cash Flows, and runs validation engine. |
+| `GET /?report_type` | `report:read` | `FinancialReportListOut`. Lists generated reporting packs. |
+| `GET /{report_id}` | `report:read` | `FinancialReportOut`. Includes full statements data and validation check results. |
+| `POST /{report_id}/sign-off` `{notes?}` | `report:sign_off` | 200 `FinancialReportOut`. Formal CA sign-off. |
+| `GET /{report_id}/export/excel` | `report:read` | Streams formatted OpenPyXL workbook with Adjusted TB, P&L, Balance Sheet, and validation tabs. |
+
+## Workflows Orchestration (Phase 9) - `/clients/{client_id}/periods/{period_id}/workflows`
+| Method & path | Permission | Notes |
+|---|---|---|
+| `POST /` | `workflow:execute` | 201 `WorkflowRunOut`. Starts end-to-end LangGraph coordination of Agents 1 through 4. |
+| `GET /` | `workflow:read` | `list[WorkflowRunOut]`. Lists historical and active workflow runs. |
+| `GET /{workflow_id}` | `workflow:read` | `WorkflowRunOut`. Shows current step, state data, and checkpoint ID. |
+| `POST /{workflow_id}/resume` | `workflow:execute` | 200 `WorkflowRunOut`. Resumes execution after CA approval checkpoint. |

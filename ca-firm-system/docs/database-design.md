@@ -209,3 +209,40 @@ Permissions added (migration 0006, mirrored in `app/core/permissions.py`):
 - `review:read`: View accounting review runs, findings, and schedules (firm_admin, ca_reviewer, accountant, client_user).
 - `review:manage`: Trigger review runs and configure review settings (firm_admin, ca_reviewer).
 - `review:resolve`: Transition finding status (explained/resolved/escalated) and add reviewer notes (firm_admin, ca_reviewer, accountant).
+
+## Phase 7 additions: period-end adjustments (migration 0007)
+
+Adjustments are stored as review proposals; they do NOT post to a ledger.
+
+| Table | Purpose / key constraints |
+|---|---|
+| `period_adjustments` | Proposed period-end adjustments (accruals, prepayments, depreciation, provisions, other). `category` CHECK; `status` draft/proposed/approved/rejected; `version` INT; `debit_account_code`, `debit_account_name`, `credit_account_code`, `credit_account_name`; `amount` Numeric(20,4) > 0; `accounting_rationale` TEXT; `calculation_details` JSONB; `source_refs` JSONB list; `history` JSONB (immutable audit trail of decisions and versions); `reviewer_id`, `reviewed_at`, `reviewer_decision`, `reviewer_comments`. |
+
+Permissions added:
+- `adjustment:read`: View adjustments (all roles).
+- `adjustment:propose`: Create and edit draft/proposed adjustments (firm_admin, ca_reviewer, accountant).
+- `adjustment:approve`: Approve or reject adjustments (firm_admin, ca_reviewer only).
+
+## Phase 8 additions: financial reporting & validation (migration 0008)
+
+The original Trial Balance is NEVER mutated. Only CA-approved adjustments feed the Adjusted Trial Balance.
+
+| Table | Purpose / key constraints |
+|---|---|
+| `account_mappings` | Maps client account codes to financial statement lines (`statement_type`: balance_sheet, profit_loss, cash_flow, equity; `category`, `sub_category`, `is_debit_balance`). Unique `(client_id, account_code)`. |
+| `financial_reports` | Generated statement outputs (`report_type`: adjusted_trial_balance, profit_loss, balance_sheet, cash_flows, changes_in_equity, full_pack). `data` JSONB; `validation_results` JSONB; `status` draft/published/signed_off; `signed_off_by`, `signed_off_at`, `sign_off_notes`. |
+
+Permissions added:
+- `report:read`: View reports and Adjusted TB (all roles).
+- `report:generate`: Generate statement packs and validation outputs (firm_admin, ca_reviewer, accountant).
+- `report:sign_off`: Formal CA sign-off on published reports (firm_admin, ca_reviewer only).
+
+## Phase 9 additions: LangGraph workflow orchestration (migration 0009)
+
+| Table | Purpose / key constraints |
+|---|---|
+| `workflow_runs` | Durable state and checkpoints for end-to-end agent orchestration. `status` running/paused_approval/completed/failed; `current_step` (intake, data_quality_gate, accounting_review, period_adjustments, ca_approval, financial_reporting, validation_gate, completed); `state_data` JSONB; `checkpoint_id` VARCHAR(100). |
+
+Permissions added:
+- `workflow:read`: View workflow state and step progress (all roles).
+- `workflow:execute`: Trigger and resume workflows (firm_admin, ca_reviewer, accountant).

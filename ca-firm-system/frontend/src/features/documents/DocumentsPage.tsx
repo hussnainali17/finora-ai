@@ -190,15 +190,44 @@ export default function DocumentsPage() {
               />
             </Typography>
           </Box>
-          <Can permission="review:read">
-            <Button
-              variant="outlined"
-              component={RouterLink}
-              to={`/clients/${clientId}/periods/${periodId}/review`}
-            >
-              Accounting Review
-            </Button>
-          </Can>
+          <Stack direction="row" spacing={1} flexWrap="wrap">
+            <Can permission="workflow:read">
+              <Button
+                variant="outlined"
+                component={RouterLink}
+                to={`/clients/${clientId}/periods/${periodId}/workflows`}
+              >
+                Workflow
+              </Button>
+            </Can>
+            <Can permission="review:read">
+              <Button
+                variant="outlined"
+                component={RouterLink}
+                to={`/clients/${clientId}/periods/${periodId}/review`}
+              >
+                Review
+              </Button>
+            </Can>
+            <Can permission="adjustment:read">
+              <Button
+                variant="outlined"
+                component={RouterLink}
+                to={`/clients/${clientId}/periods/${periodId}/adjustments`}
+              >
+                Adjustments
+              </Button>
+            </Can>
+            <Can permission="report:read">
+              <Button
+                variant="outlined"
+                component={RouterLink}
+                to={`/clients/${clientId}/periods/${periodId}/reports`}
+              >
+                Reports
+              </Button>
+            </Can>
+          </Stack>
         </Stack>
       </Paper>
 
