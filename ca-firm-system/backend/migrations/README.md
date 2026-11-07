@@ -1,0 +1,1 @@
+"""Alembic migrations are added in Phase 1."""

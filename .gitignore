@@ -1,0 +1,2 @@
+# Keep the supplied phase archives as local source inputs, not repository files.
+/*.zip
