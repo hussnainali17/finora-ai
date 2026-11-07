@@ -537,57 +537,6 @@ async def test_llm_outage_falls_back_to_heuristics_and_still_succeeds(
     assert body["tables"][0]["status"] == "needs_review"
 
 
-async def test_real_litellm_client_failure_is_swallowed_and_validated() -> None:
-    from app.agents.intake_agent.llm import ColumnQuery, LiteLlmAssistant
-
-    bad = LiteLlmAssistant("http://127.0.0.1:9", "sk-x", "m", 0.5)  # nothing listens here
-    assert await bad.suggest([ColumnQuery(0, "h", ["1"])], None, None) is None
-
-
-async def test_litellm_http_contract_with_a_stub_server() -> None:
-    """The client really calls /chat/completions with the alias + bearer key, and validates output."""
-    import json as _json
-    import threading
-    from http.server import BaseHTTPRequestHandler, HTTPServer
-
-    from app.agents.intake_agent.llm import ColumnQuery, LiteLlmAssistant
-
-    seen: dict[str, Any] = {}
-
-    class Handler(BaseHTTPRequestHandler):
-        def do_POST(self) -> None:
-            seen["path"], seen["auth"] = self.path, self.headers.get("Authorization")
-            seen["body"] = _json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-            content = _json.dumps(
-                {
-                    "document_type": "bank_statement",
-                    "columns": [{"index": 0, "role": "date", "confidence": 1}],
-                }
-            )
-            out = _json.dumps({"choices": [{"message": {"content": content}}]}).encode()
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Content-Length", str(len(out)))
-            self.end_headers()
-            self.wfile.write(out)
-
-        def log_message(self, *args: Any) -> None:  # keep test output quiet
-            pass
-
-    server = HTTPServer(("127.0.0.1", 0), Handler)
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    try:
-        res = await LiteLlmAssistant(
-            f"http://127.0.0.1:{server.server_port}", "sk-key", "intake-default", 5
-        ).suggest([ColumnQuery(0, "Date", ["01/02/2025"])], "bank_statement", None)
-    finally:
-        server.shutdown()
-    assert seen["path"] == "/chat/completions"
-    assert seen["auth"] == "Bearer sk-key" and seen["body"]["model"] == "intake-default"
-    assert seen["body"]["temperature"] == 0
-    assert res is not None and res.columns[0].role == "date" and res.columns[0].confidence == 0.8
-
-
 # ------------------------------------------------------------------------------ failures
 
 

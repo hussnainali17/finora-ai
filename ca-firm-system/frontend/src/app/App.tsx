@@ -15,6 +15,7 @@ import ClientsPage from '../features/clients/ClientsPage';
 import DocumentsPage from '../features/documents/DocumentsPage';
 import ReviewPage from '../features/documents/ReviewPage';
 import HomePage from '../features/home/HomePage';
+import ModelSettingsPage from '../features/model-settings/ModelSettingsPage';
 
 function Shell() {
   const { state, logout, can } = useAuth();
@@ -43,6 +44,11 @@ function Shell() {
               Clients
             </Button>
           )}
+          {can('llm:read') && (
+            <Button color="inherit" component={RouterLink} to="/settings/models">
+              AI models
+            </Button>
+          )}
           <Button color="inherit" onClick={() => void logout()}>
             Sign out
           </Button>
@@ -57,6 +63,10 @@ function Shell() {
           <Route
             path="/clients/:clientId/periods/:periodId/documents/:documentId/review"
             element={<ReviewPage />}
+          />
+          <Route
+            path="/settings/models"
+            element={can('llm:read') ? <ModelSettingsPage /> : <Navigate to="/" replace />}
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

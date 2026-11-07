@@ -1,20 +1,38 @@
-# LiteLLM Proxy configuration (Phase 0: gateway only, no approved models yet).
-# Phase 4 defines approved model aliases. Provider keys come from environment
-# variables on THIS container only (os.environ/...). Never inline keys here.
+# LiteLLM Proxy configuration (Phase 4): the ONLY route from this system to model providers.
 #
-# Example alias to enable later (uncomment and set the key in .env):
-#
-# model_list:
-#   - model_name: default-chat
-#     litellm_params:
-#       model: openai/gpt-4o-mini
-#       api_key: os.environ/OPENAI_API_KEY
+# * model_name is the approved ALIAS the application uses. The application keeps its own copy of the
+#   approved catalog (backend/app/llm/catalog.py); a test fails if the two lists differ, so a model cannot be
+#   added here without the application knowing its capabilities (and vice versa).
+# * Provider credentials are read from environment variables on THIS container only (os.environ/...).
+#   They are never written to this file, the application database, logs or any browser response.
+# * Provider model ids on the right are the operator's choice; verify them against your provider accounts
+#   before enabling an alias. An alias whose key is not set simply fails its health check and the backend
+#   reports it as unavailable.
+# * Retries and fallbacks are handled (and logged) by the backend gateway, not here, so every attempt is
+#   visible in the model-usage log. LiteLLM-side retries are therefore disabled.
 
-model_list: []
+model_list:
+  - model_name: fast-general
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: strong-general
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: claude-balanced
+    litellm_params:
+      model: anthropic/claude-sonnet-4-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+  - model_name: gemini-fast
+    litellm_params:
+      model: gemini/gemini-2.5-flash
+      api_key: os.environ/GEMINI_API_KEY
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
 
 litellm_settings:
-  request_timeout: 60
-  num_retries: 2
+  request_timeout: 60 # hard ceiling; the backend applies a tighter per-call timeout
+  num_retries: 0
+  drop_params: false

@@ -47,6 +47,12 @@ Code: `backend/app/agents/intake_agent/` (pure pipeline: `parsers/`, `layout`, `
 `backend/app/services/extraction.py`, API in `backend/app/api/extraction.py`. Only deterministic code produces
 values; this is review data, not a ledger.
 
+## LLM gateway (Phase 4)
+`app/llm/`: `catalog.py` (approved aliases, capabilities, tasks), `resolver.py` (firm -> agent/task -> model + fallback),
+`gateway.py` (the only code that talks to LiteLLM: timeout, retries, fallback, usage logging). Agents call
+`gateway.complete(firm_id, agent, task, messages)`; they never name a model or provider. Configuration is managed
+through `/llm` and the *AI models* screen. Agent 1's column-role suggestion is the first (and so far only) task.
+
 ## Health model
 - `GET /api/v1/health/live` - process is up (no dependency calls).
 - `GET /api/v1/health/ready` - checks Postgres, Redis, Kafka, MinIO, LiteLLM; 503 if any fails. Failure details

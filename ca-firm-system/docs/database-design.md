@@ -173,3 +173,18 @@ Permissions added by the migration (and mirrored in `app/core/permissions.py`, a
 
 Audited actions added: `extraction.completed`, `extraction.failed`, `extraction.column_role_set`,
 `extraction.table_type_set`, `extraction.finding_updated`, `extraction.rerun_requested`.
+
+## Phase 4 additions: LLM gateway configuration and usage (migration 0004)
+
+| Table | Purpose / key constraints |
+|---|---|
+| `llm_firm_policies` | One row per firm (PK `firm_id`): `allow_task_overrides` (default off), `config_version` (bumped on every change). |
+| `llm_model_settings` | `UNIQUE (firm_id, alias)`, `enabled`. Absent row = disabled. |
+| `llm_agent_configs` | `UNIQUE (firm_id, agent)`; `default_alias`, `fallback_alias`; checks: agent in the four agents, fallback <> default. |
+| `llm_task_overrides` | `UNIQUE (firm_id, agent, task)`; `alias`. |
+| `llm_call_logs` | Append-only (trigger `llm_call_logs_no_update_delete`). BigInt id; composite FK `(client_id, firm_id)` -> `clients(id, firm_id)`; agent, task, requested/served alias, provider, status ok/error, fallback_used, attempts, latency_ms, token counts, `cost_usd` Numeric(14,6), request/correlation ids, `config_version`, `error_class`, `user_id`. **No prompt or completion columns.** |
+
+Permissions added (mirrored in `app/core/permissions.py`, asserted by a test): `llm:read` (admin, reviewer,
+accountant), `llm:select` (admin, reviewer), `llm:manage` (admin).
+Audited actions: `llm.model_enabled`, `llm.model_disabled`, `llm.model_tested`, `llm.agent_config_set`,
+`llm.task_override_set`, `llm.task_override_cleared`, `llm.policy_set`.

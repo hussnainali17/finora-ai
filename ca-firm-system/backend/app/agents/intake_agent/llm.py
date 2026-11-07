@@ -1,4 +1,4 @@
-"""Optional LLM assistance for ambiguous columns. LiteLLM proxy only (OpenAI-compatible HTTP).
+"""Optional LLM assistance for ambiguous columns, via the central LLM gateway (never a provider).
 
 The model is asked to CHOOSE from a closed list of roles; it never produces numbers, dates or
 rows. Output is validated against the allowed enum and confidence is capped, so a hallucinated
@@ -6,12 +6,15 @@ answer can at worst produce a wrong *suggestion* that is always marked for human
 
 import json
 import logging
+import uuid
 from dataclasses import dataclass
-from typing import Any, Protocol
-
-import httpx
+from typing import TYPE_CHECKING, Any, Protocol
 
 from app.agents.intake_agent.types import DOC_TYPES, ROLES
+from app.llm.errors import LlmError
+
+if TYPE_CHECKING:
+    from app.llm.gateway import LlmGateway
 
 logger = logging.getLogger("app.intake.llm")
 MAX_LLM_CONFIDENCE = 0.8  # LLM suggestions never outrank a confirmed or header-based match
@@ -93,31 +96,27 @@ def parse_response(text: str, allowed_indexes: set[int], model: str) -> LlmResul
     return LlmResult(answers, dt if dt in DOC_TYPES else None, model)
 
 
-class LiteLlmAssistant:
-    def __init__(self, base_url: str, api_key: str, model: str, timeout: float) -> None:
-        self._url = base_url.rstrip("/") + "/chat/completions"
-        self._key, self._model, self._timeout = api_key, model, timeout
+class GatewayAssistant:
+    """Asks the LLM gateway (only) to classify ambiguous columns. Any gateway problem
+    (no model enabled, outage, bad output) yields None and the deterministic result stands."""
+
+    def __init__(
+        self, gateway: "LlmGateway", firm_id: uuid.UUID, client_id: uuid.UUID | None
+    ) -> None:
+        self._gw, self._firm, self._client = gateway, firm_id, client_id
 
     async def suggest(
         self, columns: list[ColumnQuery], category: str | None, doc_type_hint: str | None
     ) -> LlmResult | None:
         if not columns:
             return None
-        body = {
-            "model": self._model,
-            "temperature": 0,
-            "messages": [
-                {"role": "user", "content": build_prompt(columns, category, doc_type_hint)}
-            ],
-        }
+        prompt = build_prompt(columns, category, doc_type_hint)
         try:
-            async with httpx.AsyncClient(timeout=self._timeout) as client:
-                resp = await client.post(
-                    self._url, json=body, headers={"Authorization": f"Bearer {self._key}"}
-                )
-            resp.raise_for_status()
-            text = resp.json()["choices"][0]["message"]["content"]
-        except (httpx.HTTPError, KeyError, IndexError, ValueError) as exc:
-            logger.warning("llm assist unavailable: %s", type(exc).__name__)
-            return None  # heuristics stand on their own
-        return parse_response(str(text), {c.index for c in columns}, self._model)
+            res = await self._gw.complete(
+                firm_id=self._firm, client_id=self._client, agent="intake", task="column_roles",
+                messages=[{"role": "user", "content": prompt}],
+            )  # fmt: skip
+        except LlmError as exc:
+            logger.info("llm assist skipped: %s", exc.code)
+            return None
+        return parse_response(res.text, {c.index for c in columns}, res.alias)

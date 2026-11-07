@@ -26,6 +26,9 @@ PERMISSIONS: Final[dict[str, str]] = {
     "extraction:read": "View extracted data, column mappings and data-quality findings",
     "extraction:review": "Correct column mappings / table types and resolve data-quality findings",
     "extraction:run": "Re-run extraction for a document",
+    "llm:read": "View approved AI models, agent defaults and the firm model policy",
+    "llm:manage": "Enable/disable models, set agent defaults/fallbacks and policy, view usage",
+    "llm:select": "Choose an approved model for a specific task when firm policy allows",
 }
 
 FIRM_ADMIN = "firm_admin"
@@ -59,6 +62,8 @@ ROLES: Final[dict[str, tuple[str, str, frozenset[str]]]] = {
                 "extraction:read",
                 "extraction:review",
                 "extraction:run",
+                "llm:read",
+                "llm:select",
             }
         ),
     ),
@@ -76,6 +81,7 @@ ROLES: Final[dict[str, tuple[str, str, frozenset[str]]]] = {
                 "extraction:read",
                 "extraction:review",
                 "extraction:run",
+                "llm:read",
             }
         ),
     ),

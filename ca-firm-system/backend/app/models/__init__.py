@@ -23,6 +23,13 @@ from app.models.identity import (
     User,
     UserClientAccess,
 )
+from app.models.llm import (
+    LlmAgentConfig,
+    LlmCallLog,
+    LlmFirmPolicy,
+    LlmModelSetting,
+    LlmTaskOverride,
+)
 
 __all__ = [
     "AccountingPeriod",
@@ -35,6 +42,11 @@ __all__ = [
     "ExtractedTable",
     "ExtractionRun",
     "Firm",
+    "LlmAgentConfig",
+    "LlmCallLog",
+    "LlmFirmPolicy",
+    "LlmModelSetting",
+    "LlmTaskOverride",
     "OutboxEvent",
     "Permission",
     "RefreshToken",

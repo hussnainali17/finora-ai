@@ -100,6 +100,24 @@ Run failure codes (`run.error_code`): `corrupt_file`, `encrypted_file`, `empty_f
 `file_too_large`, `too_many_pages`, `unsupported_type`, `ocr_unavailable`, `ocr_timeout`, `ocr_failed`,
 `interrupted`, `persist_failed`, `internal_error`. Messages are user-safe (no stack traces or paths).
 
+## LLM gateway and model settings (Phase 4) - `/llm`
+All responses are metadata only: aliases, display names, capabilities - never keys or provider model ids.
+Unknown or unapproved aliases: 404 on paths, 422 in bodies. Every mutating call returns `{config_version}`.
+
+| Endpoint | Permission | Notes |
+|---|---|---|
+| `GET /llm/models` | `llm:read` | Approved models with `enabled`, `available` (null if the gateway is unreachable), `used_by`; `config_version`. |
+| `PUT /llm/models/{alias}/enabled` `{enabled}` | `llm:manage` | 409 when disabling a model used as an agent default/fallback/override. |
+| `POST /llm/models/{alias}/test` | `llm:manage` | Tiny live call; returns `{ok, alias, latency_ms, attempts, error_code}`. Audited. |
+| `GET /llm/agents` | `llm:read` | The four agents, defaults, fallbacks, eligible aliases, tasks (effective alias + source), `allow_task_overrides`. |
+| `PUT /llm/agents/{agent}` `{default_alias, fallback_alias?}` | `llm:manage` | 422 with reasons when not enabled, incapable, or fallback equals default. |
+| `PUT` / `DELETE /llm/agents/{agent}/tasks/{task}` `{alias}` | `llm:select` | 403 unless policy allows; same validation as above. |
+| `PUT /llm/policy` `{allow_task_overrides}` | `llm:manage` | |
+| `GET /llm/usage?limit&offset&agent` | `llm:manage` | Newest first; limit 1-200. |
+| `GET /llm/usage/summary` | `llm:manage` | Per alias+agent: calls, errors, fallbacks, tokens, cost, average latency. |
+
+Gateway error codes (internal, user-safe): `model_unavailable`, `input_too_large`, `llm_call_failed`.
+
 ## Audit
 `GET /audit-events?limit&offset&action&client_id&actor_user_id&since&until` - `audit:read`.
 Firm Admin: whole firm. Others with the permission: only events tied to their assigned clients.

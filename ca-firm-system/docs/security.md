@@ -67,3 +67,17 @@ out. This document makes no compliance or certification claims.
     another document, client or firm return 404). Every correction is audited with before/after values.
 25. **Integrity.** Raw extracted cells and the original object are never modified by corrections; `extraction_runs`
     carry a composite FK to `documents(id, client_id)` and every extraction table repeats firm/client/period ids.
+
+## Phase 4 additions
+26. **Single egress.** All model calls go through `app/llm/gateway.py` to the LiteLLM proxy with the server-side master
+    key; no provider SDK is imported anywhere and only the gateway and the health check use `httpx` (architecture
+    tests enforce both). Provider API keys exist only in the `litellm` container (test checks compose).
+27. **Opt-in per firm.** Nothing is enabled by default; with no enabled model nothing is sent. Only platform-approved
+    aliases can be enabled or selected (404/422 otherwise), and capability/context checks run at assignment and call time.
+28. **Metadata-only logging.** Prompts and completions are not stored in `llm_call_logs` (append-only) or audit events.
+    Errors returned to users never include provider names, URLs, response bodies or keys.
+29. **Authorization.** `llm:manage` (admin only) for models, defaults, policy, test and usage; `llm:select` for task
+    overrides, only when the firm policy allows. Configuration is per firm; one firm cannot read or change another's.
+30. **Bounded cost/availability.** Timeout, bounded retries with backoff and an explicit fallback only; no model is ever
+    tried that the firm did not enable. Residual risk: a firm admin who enables a provider accepts that provider's
+    data handling for client sample data - review provider terms before enabling.

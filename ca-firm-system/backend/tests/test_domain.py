@@ -369,6 +369,11 @@ async def test_no_ledger_or_bookkeeping_tables_exist(db: AsyncSession) -> None:
         "extracted_columns",
         "extracted_rows",
         "data_quality_findings",
+        "llm_firm_policies",
+        "llm_model_settings",
+        "llm_agent_configs",
+        "llm_task_overrides",
+        "llm_call_logs",
         "alembic_version",
     }
     assert not any(w in t for t in tables for w in ("ledger", "journal", "posting", "transaction"))

@@ -74,11 +74,17 @@ class Settings(BaseSettings):
     intake_ocr_enabled: bool = True
     intake_ocr_timeout_seconds: int = Field(default=300, ge=10)
     intake_ocr_language: str = "eng"
-    # LLM assistance for ambiguous column/document-type interpretation, via LiteLLM only.
+    # LLM assistance for ambiguous columns. Which model is used comes from the firm's model
+    # settings (Phase 4); nothing is sent unless a firm admin has enabled a model.
     intake_llm_enabled: bool = True
-    intake_llm_model: str = "intake-default"  # a LiteLLM model alias (Phase 4 manages aliases)
-    intake_llm_timeout_seconds: float = Field(default=30.0, gt=0)
     intake_llm_min_confidence: float = Field(default=0.7, ge=0, le=1)
+
+    # --- LLM gateway (Phase 4) -----------------------------------------------------
+    # Every AI call goes through the LiteLLM proxy at LITELLM_BASE_URL with these limits.
+    llm_timeout_seconds: float = Field(default=30.0, gt=0, le=300)
+    llm_max_retries: int = Field(default=2, ge=0, le=5)  # retries of ONE alias, before any fallback
+    llm_retry_backoff_seconds: float = Field(default=0.5, ge=0, le=10)  # doubles each retry
+    llm_availability_timeout_seconds: float = Field(default=3.0, gt=0, le=30)
 
     @property
     def upload_extensions(self) -> frozenset[str]:

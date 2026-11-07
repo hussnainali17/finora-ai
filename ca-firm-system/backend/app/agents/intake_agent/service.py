@@ -15,7 +15,7 @@ from typing import Any
 from sqlalchemy import func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from app.agents.intake_agent.llm import IntakeAssistant, LiteLlmAssistant
+from app.agents.intake_agent.llm import GatewayAssistant, IntakeAssistant
 from app.agents.intake_agent.parsers.csv_parser import parse_csv
 from app.agents.intake_agent.parsers.excel import parse_xls, parse_xlsx
 from app.agents.intake_agent.parsers.ocr import OcrEngine, OcrMyPdfEngine, image_to_pdf
@@ -24,6 +24,7 @@ from app.agents.intake_agent.pipeline import PARSER_VERSION, TableDraft, build_t
 from app.agents.intake_agent.types import ExtractionError, FindingDraft, ParsedFile
 from app.core.config import Settings
 from app.integrations.storage.s3 import ObjectStore
+from app.llm.gateway import LlmGateway
 from app.models import (
     AccountingPeriod,
     DataQualityFinding,
@@ -47,15 +48,15 @@ def default_ocr_engine(settings: Settings) -> OcrEngine | None:
     return OcrMyPdfEngine(settings.intake_ocr_language, settings.intake_ocr_timeout_seconds)
 
 
-def default_assistant(settings: Settings) -> IntakeAssistant | None:
+def default_assistant(
+    settings: Settings,
+    sessionmaker: async_sessionmaker[AsyncSession],
+    firm_id: uuid.UUID,
+    client_id: uuid.UUID,
+) -> IntakeAssistant | None:
     if not settings.intake_llm_enabled:
         return None
-    return LiteLlmAssistant(
-        settings.litellm_base_url,
-        settings.litellm_api_key.get_secret_value(),
-        settings.intake_llm_model,
-        settings.intake_llm_timeout_seconds,
-    )
+    return GatewayAssistant(LlmGateway(sessionmaker, settings), firm_id, client_id)
 
 
 def parse_bytes(
@@ -184,7 +185,9 @@ async def process_run(
         parsed = await asyncio.to_thread(parse_bytes, filename, data, settings, engine)
         tables = await build_tables(
             parsed, category=category, default_date_order=settings.intake_default_date_order,
-            assistant=assistant if assistant is not None else default_assistant(settings),
+            assistant=assistant
+            if assistant is not None
+            else default_assistant(settings, sessionmaker, firm_id, client_id),
             llm_min_confidence=settings.intake_llm_min_confidence, carried_roles=carried_roles,
         )  # fmt: skip
         if not tables:
