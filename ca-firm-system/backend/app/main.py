@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import uuid
 from collections.abc import AsyncIterator, Awaitable, Callable
@@ -10,6 +11,9 @@ from app.api.router import api_router
 from app.core.config import get_settings
 from app.core.errors import register_error_handlers
 from app.core.logging import client_ip_var, configure_logging, correlation_id_var
+from app.db.session import get_sessionmaker
+from app.integrations.kafka.publisher import KafkaEventPublisher, get_event_publisher
+from app.services.outbox import run_relay
 
 logger = logging.getLogger("app")
 
@@ -21,13 +25,31 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     configure_logging(settings.log_level)
     logger.info("backend starting", extra={"env": settings.app_env})
+    relay: asyncio.Task[None] | None = None
+    stop = asyncio.Event()
+    if settings.outbox_relay_enabled:
+        # Publishes committed outbox rows (e.g. file.uploaded) to Kafka; safe with many replicas.
+        relay = asyncio.create_task(
+            run_relay(
+                get_sessionmaker(),
+                get_event_publisher(),
+                interval_seconds=settings.outbox_poll_interval_seconds,
+                stop=stop,
+            )
+        )
     yield
+    stop.set()
+    if relay is not None:
+        await relay
+        publisher = get_event_publisher()
+        if isinstance(publisher, KafkaEventPublisher):
+            await publisher.close()
     logger.info("backend stopping")
 
 
 def create_app() -> FastAPI:
     settings = get_settings()
-    app = FastAPI(title="CA Firm System API", version="0.2.0", lifespan=lifespan)
+    app = FastAPI(title="CA Firm System API", version="0.3.0", lifespan=lifespan)
 
     app.add_middleware(
         CORSMiddleware,

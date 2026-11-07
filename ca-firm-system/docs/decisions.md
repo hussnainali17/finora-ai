@@ -22,3 +22,11 @@
 | 18 | Emails are globally unique | One login maps to exactly one firm. A firm admin creating an email used by another firm gets a 409 (minor existence disclosure; accepted). |
 | 19 | Audit log is append-only via DB triggers; events written in the same transaction | Tamper resistance and atomicity with the change. Hash-chaining/export is a Phase 11 item. |
 | 20 | No sign-up endpoint; first firm/admin via `python -m app.cli bootstrap-firm` | Removes an unauthenticated account-creation attack surface. |
+| 21 | Files go through the backend (upload and download); no presigned URLs | Keeps firm/client authorisation and audit on every byte in and out. Cost: backend bandwidth; revisit at scale. |
+| 22 | Metadata in Postgres, bytes in S3; originals immutable via DB trigger + UUID keys + bucket versioning | "Original files remain unchanged" is enforced by the database, not just by convention. |
+| 23 | Soft delete only; the stored object is retained | The client's source evidence is never destroyed by a click. A retention/purge policy is a deliberate later decision. |
+| 24 | Duplicate = same SHA-256 live in the same client period (unique partial index) | Safe, explainable rule; allows legitimate reuse across periods and re-upload after removal. |
+| 25 | Content verified by magic bytes, not just extension; .xlsm and other formats rejected | Stops renamed executables/macro workbooks. Not a substitute for malware scanning (hook exists, Phase 11). |
+| 26 | Transactional outbox + relay for `file.uploaded` (at-least-once) instead of publishing inside the request | An event exists iff the upload committed; survives Kafka outages. Pulls the outbox pattern forward from Phase 5. |
+| 27 | Relay runs inside the backend lifespan for now | Simple; safe with replicas via SKIP LOCKED. May move to the worker service in Phase 5. |
+| 28 | react-router-dom for client workspace navigation | Deep-linkable client/period/document pages. |

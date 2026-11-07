@@ -49,6 +49,26 @@ class Settings(BaseSettings):
     login_max_failed_attempts: int = Field(default=5, ge=3, le=20)
     login_lockout_minutes: int = Field(default=15, ge=1, le=1440)
 
+    # --- Object storage / uploads (Phase 2) -----------------------------------
+    s3_region: str = "us-east-1"
+    max_upload_bytes: int = Field(default=50 * 1024 * 1024, ge=1024)
+    # Comma-separated lowercase extensions accepted for upload.
+    allowed_upload_extensions: str = "pdf,xlsx,xls,csv,png,jpg,jpeg"
+
+    # --- Event publication (Phase 2; Phase 5 builds the full framework on this) ----
+    file_uploaded_topic: str = "file-uploaded"
+    # Background outbox relay. Disabled in tests, which drive the relay explicitly.
+    outbox_relay_enabled: bool = True
+    outbox_poll_interval_seconds: float = Field(default=2.0, gt=0)
+
+    @property
+    def upload_extensions(self) -> frozenset[str]:
+        return frozenset(
+            e.strip().lower().lstrip(".")
+            for e in self.allowed_upload_extensions.split(",")
+            if e.strip()
+        )
+
     @property
     def async_database_url(self) -> str:
         """SQLAlchemy async URL derived from DATABASE_URL (asyncpg driver)."""

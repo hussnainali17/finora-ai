@@ -4,9 +4,9 @@ AI-assisted **accounting review and financial reporting** platform for a CA firm
 supply Excel/CSV/PDF records; this system imports, reviews, reconciles and reports on them.
 It does **not** create a ledger, post transactions or do bookkeeping, tax or audit work.
 
-> **Status: Phase 1 - database, authentication and tenant isolation.** Users can sign in; firms, clients and
-> accounting periods exist with role- and client-level access control and an audit trail. No accounting
-> features yet. See the roadmap for the phase plan.
+> **Status: Phase 2 - client workspace and file management.** Sign in, browse clients and accounting periods,
+> upload/list/download/remove client files (stored immutably in object storage), with role- and client-level
+> access control, duplicate detection, an audit trail and a `file.uploaded` event. No accounting parsing yet. See the roadmap for the phase plan.
 
 ## Stack
 React + TypeScript + MUI · FastAPI · PostgreSQL · Redis · Kafka (KRaft) · MinIO · LiteLLM Proxy · Docker Compose · Nginx
@@ -17,7 +17,7 @@ frontend/         React + TS + MUI (Vite)
 backend/          FastAPI app (api, core, db, models, schemas, services, agents, workflows, accounting, integrations)
 workers/          Python Kafka-consumer workers (health server + shutdown only in Phase 0)
 infrastructure/   nginx, litellm, kafka, monitoring, docker assets
-docs/             architecture, decisions, security, database-design, api-contracts
+docs/             architecture, decisions, security, database-design, api-contracts, event-contracts
 ```
 
 ## Prerequisites
@@ -75,7 +75,8 @@ docker compose exec postgres createdb -U "$POSTGRES_USER" cafirm_test
 export TEST_DATABASE_URL=postgresql://USER:PASSWORD@localhost:5432/cafirm_test
 cd backend && pytest
 ```
-Without `TEST_DATABASE_URL` those tests are skipped (health/config tests still run) - CI always sets it.
+Storage tests use an in-process S3 server (moto) and Kafka is faked, so no MinIO/Kafka is needed. Without
+`TEST_DATABASE_URL` those tests are skipped (health/config tests still run) - CI always sets it.
 
 ## Configuration and secrets
 See [docs/security.md](docs/security.md). Short version: `.env` is never committed, provider keys exist only in the
@@ -87,5 +88,8 @@ See [docs/security.md](docs/security.md). Short version: `.env` is never committ
   `litellm` image tags before staging.
 - Kafka readiness is a TCP check; workers do not consume topics yet (Phase 5).
 - LiteLLM has no approved models configured yet (Phase 4).
+- Phase 2: uploaded files are NOT malware-scanned yet (hook only); the Kafka producer is tested with a fake
+  broker only (no broker in the authoring environment), and `file.uploaded` has no consumer until Phase 3/5;
+  orphan-object reconciliation is Phase 11.
 - Phase 1: no MFA, no email-based password reset, no Postgres row-level security, HS256 shared secret; see
   [docs/security.md](docs/security.md). Client/period screens arrive in Phase 2 (the API exists now).

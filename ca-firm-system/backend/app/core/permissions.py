@@ -20,6 +20,9 @@ PERMISSIONS: Final[dict[str, str]] = {
     "period:update": "Edit open accounting periods",
     "period:close": "Close and reopen accounting periods",
     "audit:read": "View the audit trail (limited to accessible clients unless client:access_all)",
+    "document:read": "List and download documents of accessible clients",
+    "document:upload": "Upload documents to open accounting periods of accessible clients",
+    "document:delete": "Remove (soft-delete) documents; the original object is retained",
 }
 
 FIRM_ADMIN = "firm_admin"
@@ -47,18 +50,30 @@ ROLES: Final[dict[str, tuple[str, str, frozenset[str]]]] = {
                 "period:update",
                 "period:close",
                 "audit:read",
+                "document:read",
+                "document:upload",
+                "document:delete",
             }
         ),
     ),
     ACCOUNTANT: (
         "Accountant / Staff",
         "Prepares work for assigned clients. Cannot close periods.",
-        frozenset({"client:read", "period:read", "period:create", "period:update"}),
+        frozenset(
+            {
+                "client:read",
+                "period:read",
+                "period:create",
+                "period:update",
+                "document:read",
+                "document:upload",
+            }
+        ),
     ),
     CLIENT_USER: (
         "Read-only Client User",
         "Client-portal user: read-only access to assigned clients only.",
-        frozenset({"client:read", "period:read"}),
+        frozenset({"client:read", "period:read", "document:read"}),
     ),
 }
 

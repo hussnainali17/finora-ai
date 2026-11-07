@@ -352,6 +352,8 @@ async def test_no_ledger_or_bookkeeping_tables_exist(db: AsyncSession) -> None:
         ).all()
     }
     assert tables == {
+        "documents",
+        "outbox_events",
         "firms",
         "users",
         "roles",

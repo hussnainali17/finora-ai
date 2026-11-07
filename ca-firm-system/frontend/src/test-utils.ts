@@ -33,6 +33,7 @@ export function mockApi(routes: Record<string, Route>) {
       ok: status >= 200 && status < 300,
       status,
       json: () => Promise.resolve(body),
+      blob: () => Promise.resolve(new Blob([String(body ?? '')])),
     } as Response);
   });
   vi.stubGlobal('fetch', fn);

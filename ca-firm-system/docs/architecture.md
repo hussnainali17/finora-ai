@@ -1,4 +1,4 @@
-# Architecture (Phase 0 + Phase 1)
+# Architecture (Phase 0 - 2)
 
 The CA Firm System is an **accounting review and financial reporting platform**. Clients keep their own books;
 this system imports their exports, reviews and reconciles them, proposes adjustments (kept separate until CA
@@ -31,6 +31,11 @@ Browser ──> Nginx :8080 ──> /      Frontend (React + MUI, Vite dev serve
 - Full schema, authorization matrix and auth design: [database-design.md](database-design.md);
   endpoints: [api-contracts.md](api-contracts.md).
 - Migrations run as a one-shot `migrate` container; the backend waits for it.
+
+## Files and events (Phase 2)
+`Browser -> API (authz) -> temp file (size cap, SHA-256, content check) -> MinIO/S3 (immutable original) ->
+Postgres tx { documents row + audit + outbox event } -> outbox relay -> Kafka file-uploaded`.
+See [database-design.md](database-design.md) (documents/outbox) and [event-contracts.md](event-contracts.md).
 
 ## Health model
 - `GET /api/v1/health/live` - process is up (no dependency calls).

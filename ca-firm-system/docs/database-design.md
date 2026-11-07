@@ -1,4 +1,4 @@
-# Database and authorization design (Phase 1)
+# Database and authorization design (Phase 1 + Phase 2)
 
 PostgreSQL 16, SQLAlchemy 2 (async), Alembic. This is an **accounting review** product: there is no
 ledger, journal, posting or transaction table, and a test (`test_no_ledger_or_bookkeeping_tables_exist`)
@@ -12,6 +12,8 @@ firms 1──* users *──1 roles *──* permissions            (role_permis
   │          └──* user_client_access *──1 clients       (explicit client assignment)
   │
   └──* clients 1──* accounting_periods
+clients 1──* documents *──1 accounting_periods          (Phase 2; metadata only - files live in S3/MinIO)
+outbox_events                                            (Phase 2; events awaiting Kafka publication)
 users 1──* refresh_tokens                                (hashed, rotating, per-session family)
 audit_events                                             (append-only; no FKs by design)
 ```
@@ -115,3 +117,37 @@ Audited actions: `auth.login`, `auth.login_failed`, `auth.logout`, `auth.refresh
 (it also enables `btree_gist` and seeds roles/permissions). `alembic check` runs in the test suite and
 fails if the ORM models and migrations drift apart. Run: `make migrate` (Docker) or
 `cd backend && alembic upgrade head` (needs `DATABASE_URL`).
+
+## Phase 2 additions: documents and the outbox
+
+`documents` holds **metadata only**; the bytes are in S3/MinIO under
+`firms/{firm}/clients/{client}/periods/{period}/{document_id}/original` (no user-supplied text in keys).
+
+| Column(s) | Notes |
+|---|---|
+| `client_id, firm_id` | composite FK to `clients(id, firm_id)`. |
+| `period_id, client_id` | composite FK to `accounting_periods(id, client_id)`: **a document's period must belong to its client** (needs `uq_accounting_periods_id_client_id`). |
+| `uploaded_by, firm_id` | composite FK to `users(id, firm_id)`. |
+| `category` | trial_balance, bank_statement, invoice, receipt, contract, fixed_asset_schedule, inventory_report, payroll_schedule, other. |
+| `original_filename`, `content_type`, `size_bytes`, `sha256`, `object_key` | sanitised display name; content type derived from verified bytes; SHA-256 of the exact bytes. |
+| `status` | `uploaded` -> `queued` (event published) -> `processing` -> `processed` / `failed`. Phase 2 sets the first two; Phase 3+ the rest. |
+| `deleted_at`, `deleted_by` | soft delete. The object is **retained**. |
+
+* **Immutable originals (database-enforced).** A trigger rejects any UPDATE of the file-identity columns
+  (firm, client, period, category, filename, key, content type, size, hash, uploader, created_at) and any
+  DELETE. Only `status`, `updated_at` and `deleted_*` may change. The object key embeds a fresh UUID so no
+  upload ever overwrites an existing object, and the MinIO bucket is versioned.
+* **Duplicate detection.** Partial unique index `uq_documents_live_hash (client_id, period_id, sha256)
+  WHERE deleted_at IS NULL`. The same bytes cannot be live twice in a client period (a removed file can be
+  re-uploaded; the same file in a different period is allowed). The service also pre-checks to avoid
+  uploading bytes it will reject, and the index settles concurrent races.
+* **Permissions added:** `document:read` (all roles), `document:upload` (Firm Admin, CA/Reviewer,
+  Accountant), `document:delete` (Firm Admin, CA/Reviewer). Scope rules are unchanged: client assignment
+  applies, out-of-scope = 404. Closed periods and archived clients accept neither uploads nor removals.
+
+`outbox_events` implements the **transactional outbox**: an event row is inserted in the same transaction
+as the document, so an event exists if and only if the upload committed. See
+[event-contracts.md](event-contracts.md).
+
+Audited actions added: `document.uploaded`, `document.upload_rejected`, `document.duplicate_rejected`,
+`document.downloaded`, `document.deleted`.

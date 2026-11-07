@@ -19,6 +19,8 @@ os.environ.update(
         "LITELLM_API_KEY": "sk-test",
         "JWT_SECRET": "test-only-jwt-secret-0123456789-abcdefghij",
         "LOGIN_MAX_FAILED_ATTEMPTS": "5",
+        "OUTBOX_RELAY_ENABLED": "false",  # tests drive the relay explicitly
+        "MAX_UPLOAD_BYTES": "1048576",  # 1 MiB so size-limit tests stay fast
     }
 )
 
@@ -32,6 +34,8 @@ from sqlalchemy.pool import NullPool  # noqa: E402
 from app.core.permissions import ACCOUNTANT, CA_REVIEWER, CLIENT_USER, FIRM_ADMIN  # noqa: E402
 from app.core.security import hash_password  # noqa: E402
 from app.db.session import get_session  # noqa: E402
+from app.integrations.kafka.publisher import EventEnvelope, get_event_publisher  # noqa: E402
+from app.integrations.storage.s3 import S3ObjectStore, get_object_store  # noqa: E402
 from app.main import create_app  # noqa: E402
 from app.models import Client, Firm, User, UserClientAccess  # noqa: E402
 
@@ -89,11 +93,66 @@ async def db(session_factory: async_sessionmaker[AsyncSession]) -> AsyncIterator
         yield session
 
 
+# ----------------------------------------------------------------------------- S3 + Kafka fakes
+# Object storage is a REAL S3 protocol server (moto) so uploads/downloads exercise boto3 for real.
+# Kafka is replaced by an in-memory publisher (no broker in the test environment).
+
+BUCKET = "ca-firm-test"
+
+
+@pytest.fixture(scope="session")
+def s3_server() -> Iterator[str]:
+    from moto.server import ThreadedMotoServer
+
+    server = ThreadedMotoServer(ip_address="127.0.0.1", port=0, verbose=False)
+    server.start()
+    host, port = server.get_host_and_port()
+    yield f"http://{host}:{port}"
+    server.stop()
+
+
+@pytest.fixture
+def store(s3_server: str) -> S3ObjectStore:
+    import boto3
+
+    boto3.client(
+        "s3",
+        endpoint_url=s3_server,
+        aws_access_key_id="k",
+        aws_secret_access_key="s",
+        region_name="us-east-1",
+    ).create_bucket(Bucket=BUCKET)  # idempotent for moto
+    return S3ObjectStore(
+        endpoint=s3_server, access_key="k", secret_key="s", bucket=BUCKET, region="us-east-1"
+    )
+
+
+class FakePublisher:
+    def __init__(self) -> None:
+        self.published: list[tuple[str, str, EventEnvelope]] = []
+        self.fail_next = 0
+
+    async def publish(self, topic: str, key: str, event: EventEnvelope) -> None:
+        if self.fail_next:
+            self.fail_next -= 1
+            raise ConnectionError("broker unavailable: kafka.internal:9092 secret-host")
+        self.published.append((topic, key, event))
+
+
+@pytest.fixture
+def publisher() -> FakePublisher:
+    return FakePublisher()
+
+
 @pytest_asyncio.fixture
 async def api(
     session_factory: async_sessionmaker[AsyncSession],
+    store: S3ObjectStore,
+    publisher: FakePublisher,
 ) -> AsyncIterator[httpx.AsyncClient]:
     app = create_app()
+    app.dependency_overrides[get_object_store] = lambda: store
+    app.dependency_overrides[get_event_publisher] = lambda: publisher
 
     async def _session() -> AsyncIterator[AsyncSession]:
         async with session_factory() as session:

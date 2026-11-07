@@ -28,6 +28,20 @@
 14. Create the first account with `python -m app.cli bootstrap-firm`; the password comes from
     `BOOTSTRAP_ADMIN_PASSWORD` or an interactive no-echo prompt, never a command-line argument.
 
+## Phase 2 additions
+
+15. Uploads are size-limited while streaming (413), extension-allow-listed and content-verified; filenames are
+    sanitised (no paths/control characters) and never used in object keys.
+16. Downloads are served only by the backend after permission + client-scope checks, as attachments with
+    `nosniff` and `no-store`; every download, upload, rejection, duplicate and removal is audited.
+17. Original files are immutable (database trigger) and soft-deleted files are retained in storage.
+18. Kafka messages and audit metadata contain IDs/hashes only - never file contents; the SHA-256 and size
+    are recorded for integrity.
+19. Malware scanning: a `FileScanner` hook runs on every upload but the default is a no-op. **Uploaded files
+    are not virus-scanned until Phase 11 wires ClamAV or similar.**
+20. Orphaned objects (process killed after the object write but before the DB commit) are possible; the
+    compensation handles ordinary failures only. A periodic reconciliation job is a Phase 11 item.
+
 **Known limitations (tracked for Phase 11):** audit-log IPs show the proxy address until uvicorn is run
 with `--proxy-headers` and a restricted `--forwarded-allow-ips`; HS256 is a shared-secret scheme (move to
 asymmetric keys if tokens are ever verified by other services); no MFA; no email-based password reset (an

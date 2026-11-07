@@ -152,6 +152,8 @@ class AccountingPeriod(Base):
             ondelete="CASCADE",
         ),
         UniqueConstraint("id", "firm_id", name="uq_accounting_periods_id_firm_id"),
+        # Target for documents' (period_id, client_id) foreign key.
+        UniqueConstraint("id", "client_id", name="uq_accounting_periods_id_client_id"),
         UniqueConstraint("client_id", "label", name="uq_accounting_periods_client_id_label"),
         CheckConstraint("end_date >= start_date", name="dates_ordered"),
         CheckConstraint("status IN ('open', 'closed')", name="status_valid"),

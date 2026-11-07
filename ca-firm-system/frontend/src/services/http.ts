@@ -8,6 +8,7 @@ export class ApiError extends Error {
   constructor(
     public readonly status: number,
     message: string,
+    public readonly body: Record<string, unknown> = {},
   ) {
     super(message);
     this.name = 'ApiError';
@@ -16,14 +17,15 @@ export class ApiError extends Error {
 
 async function errorFrom(resp: Response): Promise<ApiError> {
   let message = `Request failed (${resp.status})`;
+  let body: Record<string, unknown> = {};
   try {
-    const body = (await resp.json()) as { detail?: unknown };
+    body = (await resp.json()) as Record<string, unknown>;
     if (typeof body.detail === 'string') message = body.detail;
     else if (Array.isArray(body.detail)) message = 'Please check the highlighted fields';
   } catch {
     /* non-JSON error body */
   }
-  return new ApiError(resp.status, message);
+  return new ApiError(resp.status, message, body);
 }
 
 type SessionListener = (session: TokenResponse | null) => void;
@@ -64,13 +66,15 @@ export function refreshSession(): Promise<TokenResponse | null> {
   return refreshInFlight;
 }
 
-/** Authenticated JSON request with one transparent retry after a 401. */
-export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+/** Authenticated request with one transparent retry after a 401. Returns the raw Response. */
+export async function apiRequest(path: string, init: RequestInit = {}): Promise<Response> {
   const send = () => {
     const headers = new Headers(init.headers);
     const token = tokenStore.get();
     if (token) headers.set('Authorization', `Bearer ${token}`);
-    if (init.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+    // Only JSON string bodies get a JSON content type; FormData must set its own multipart boundary.
+    if (typeof init.body === 'string' && !headers.has('Content-Type'))
+      headers.set('Content-Type', 'application/json');
     return fetch(`${API_BASE_URL}${path}`, { ...init, headers });
   };
 
@@ -85,6 +89,12 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
     }
   }
   if (!resp.ok) throw await errorFrom(resp);
+  return resp;
+}
+
+/** Authenticated JSON request. */
+export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const resp = await apiRequest(path, init);
   return resp.status === 204 ? (undefined as T) : ((await resp.json()) as T);
 }
 
