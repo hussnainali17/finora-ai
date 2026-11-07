@@ -279,6 +279,17 @@ export default function DocumentsPage() {
                       />
                     </TableCell>
                     <TableCell align="right">
+                      <Can permission="extraction:read">
+                        {(d.status === 'processed' || d.status === 'failed') && (
+                          <Button
+                            size="small"
+                            component={RouterLink}
+                            to={`/clients/${clientId}/periods/${periodId}/documents/${d.id}/review`}
+                          >
+                            Review data
+                          </Button>
+                        )}
+                      </Can>
                       <Button size="small" onClick={() => void onDownload(d)}>
                         Download
                       </Button>

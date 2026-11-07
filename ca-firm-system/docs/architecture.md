@@ -1,4 +1,4 @@
-# Architecture (Phase 0 - 2)
+# Architecture (Phase 0 - 3)
 
 The CA Firm System is an **accounting review and financial reporting platform**. Clients keep their own books;
 this system imports their exports, reviews and reconciles them, proposes adjustments (kept separate until CA
@@ -36,6 +36,16 @@ Browser ──> Nginx :8080 ──> /      Frontend (React + MUI, Vite dev serve
 `Browser -> API (authz) -> temp file (size cap, SHA-256, content check) -> MinIO/S3 (immutable original) ->
 Postgres tx { documents row + audit + outbox event } -> outbox relay -> Kafka file-uploaded`.
 See [database-design.md](database-design.md) (documents/outbox) and [event-contracts.md](event-contracts.md).
+
+## Data extraction - Agent 1 (Phase 3)
+`documents (uploaded|queued) -> intake runner (claim, SKIP LOCKED) -> parse (xlsx/xls/csv/PDF/OCR) -> layout
+detection -> classify roles + type (heuristics, optional LiteLLM suggestion) -> normalize (Decimal/ISO dates) ->
+Postgres tx { extracted_tables/columns/rows + findings + run + audit } -> document processed|failed`, then a
+human reviews/corrects on the review screen (corrections re-derive normalized values; raw never changes).
+Code: `backend/app/agents/intake_agent/` (pure pipeline: `parsers/`, `layout`, `classify`, `normalize`, `values`,
+`pipeline`; `llm` = LiteLLM client; `service` = persistence + runner), review operations in
+`backend/app/services/extraction.py`, API in `backend/app/api/extraction.py`. Only deterministic code produces
+values; this is review data, not a ledger.
 
 ## Health model
 - `GET /api/v1/health/live` - process is up (no dependency calls).

@@ -1,4 +1,4 @@
-# Event contracts (Phase 2 subset)
+# Event contracts (Phase 2 subset; Phase 3 adds none)
 
 Phase 5 builds the full Kafka framework (topics, consumer groups, retries, dead-lettering). Phase 2 fixes
 the envelope and the first event so that work does not need to change them.
@@ -28,3 +28,9 @@ A consumer must (1) deduplicate on `event_id`, (2) re-check the document and aut
    same row twice at the same time.
 
 Topics are auto-created by the dev broker; Phase 5 defines partitions/retention explicitly.
+
+## Phase 3 note
+Phase 3 publishes **no new events** and does not consume `file.uploaded`: the extraction runner finds documents
+by status in the database (see decision 36). Its completion is recorded as audit events
+(`extraction.completed` / `extraction.failed`). A future `extraction.completed` domain event and a
+Kafka-driven worker are Phase 5 work; the `file.uploaded` contract above is unchanged.

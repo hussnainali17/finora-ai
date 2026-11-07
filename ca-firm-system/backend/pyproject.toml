@@ -23,6 +23,11 @@ dependencies = [
   "python-multipart>=0.0.9",
   "boto3>=1.34,<2.0",
   "aiokafka>=0.11,<1.0",
+  "pymupdf>=1.24",
+  "openpyxl>=3.1,<4.0",
+  "xlrd>=2.0.1,<3.0",
+  "ocrmypdf>=16.0",
+  "pypdfium2>=4.30",
 ]
 
 [project.optional-dependencies]
@@ -55,8 +60,12 @@ strict = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-module = ["asyncpg.*", "alembic.*", "boto3.*", "botocore.*", "aiokafka.*", "moto.*"]
+module = ["asyncpg.*", "alembic.*", "boto3.*", "botocore.*", "aiokafka.*", "moto.*", "pymupdf.*", "fitz.*", "xlrd.*", "ocrmypdf.*", "openpyxl.*"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["app.agents.intake_agent.parsers.*"]
+disallow_untyped_calls = false
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

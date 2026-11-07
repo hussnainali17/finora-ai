@@ -1,4 +1,4 @@
-# Database and authorization design (Phase 1 + Phase 2)
+# Database and authorization design (Phase 1 - 3)
 
 PostgreSQL 16, SQLAlchemy 2 (async), Alembic. This is an **accounting review** product: there is no
 ledger, journal, posting or transaction table, and a test (`test_no_ledger_or_bookkeeping_tables_exist`)
@@ -151,3 +151,25 @@ as the document, so an event exists if and only if the upload committed. See
 
 Audited actions added: `document.uploaded`, `document.upload_rejected`, `document.duplicate_rejected`,
 `document.downloaded`, `document.deleted`.
+
+## Phase 3 additions: extracted review data (migration 0003)
+
+None of these tables is a ledger; they hold a *copy of what the client supplied*, structured for review.
+Each carries `firm_id`, `client_id`, `period_id` and `document_id` (denormalised for scoped queries).
+
+| Table | Purpose / key constraints |
+|---|---|
+| `extraction_runs` | One row per attempt. Composite FK `(document_id, client_id)` -> `documents(id, client_id)` (new unique `uq_documents_id_client_id`). `UNIQUE (document_id, version)`; partial unique index `uq_extraction_runs_current` allows **one `is_current` run per document**. `status` running/completed/failed; `error_code`/`error_message` (user-safe); `summary` JSONB; `llm_used`, `llm_model`; `trigger` auto/manual; `parser_version`. |
+| `extracted_tables` | One per detected table (sheet, CSV, PDF page). `detected_type` + `type_confidence` + `type_source`; `confirmed_type` (reviewer); `detected_currency`, `period_start/end`; `status` ok/needs_review/ignored; `source_ref`, `metadata` (title, preamble). Cascades from its run. |
+| `extracted_columns` | `suggested_role`, `confidence`, `role_source`, `confirmed_role`/`confirmed_by/at`. `UNIQUE (table_id, col_index)`. Effective role = `confirmed_role` else `suggested_role`. |
+| `extracted_rows` | `row_index` = source row number (sheet row / page line); `source_ref`; `raw` (JSONB `{col: {v, t}}`, verbatim, never updated after insert); `normalized` (derived `{col: string\|null}`); `flags` (JSONB list). BigInt identity key; `UNIQUE (table_id, row_index)`. |
+| `data_quality_findings` | `code`, `severity` info/warning/error, `message`, `details`, `origin` parse/normalize, `status` open/resolved/dismissed with resolver and note. Normalize-origin findings are regenerated on correction; earlier resolve/dismiss decisions are kept by (code, column). |
+
+Document status machine (extended): `uploaded` -> `queued` -> `processing` -> `processed` | `failed`;
+`processed`/`failed` -> `queued` on re-run.
+
+Permissions added by the migration (and mirrored in `app/core/permissions.py`, asserted by a test):
+`extraction:read` (all roles), `extraction:review`, `extraction:run` (Firm Admin, CA/Reviewer, Accountant).
+
+Audited actions added: `extraction.completed`, `extraction.failed`, `extraction.column_role_set`,
+`extraction.table_type_set`, `extraction.finding_updated`, `extraction.rerun_requested`.

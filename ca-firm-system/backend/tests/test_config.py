@@ -63,3 +63,16 @@ def test_insecure_cookie_rejected_in_production() -> None:
 
 def test_async_database_url_uses_asyncpg_driver() -> None:
     assert Settings(**BASE).async_database_url == "postgresql+asyncpg://u:p@h/db"  # type: ignore[arg-type]
+
+
+def test_intake_defaults_are_safe_and_validated() -> None:
+    s = Settings(**BASE)  # type: ignore[arg-type]
+    assert s.intake_default_date_order == "DMY"
+    assert s.intake_llm_min_confidence == 0.7
+    assert s.intake_max_rows >= 100 and s.intake_max_pages >= 1
+    with pytest.raises(ValidationError):
+        Settings(**{**BASE, "intake_default_date_order": "YMD"})  # type: ignore[arg-type]
+    with pytest.raises(ValidationError):
+        Settings(**{**BASE, "intake_llm_min_confidence": 1.5})  # type: ignore[arg-type]
+    with pytest.raises(ValidationError):
+        Settings(**{**BASE, "intake_poll_interval_seconds": 0})  # type: ignore[arg-type]

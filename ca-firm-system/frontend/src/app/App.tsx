@@ -13,6 +13,7 @@ import LoginPage from '../features/auth/LoginPage';
 import ClientDetailPage from '../features/clients/ClientDetailPage';
 import ClientsPage from '../features/clients/ClientsPage';
 import DocumentsPage from '../features/documents/DocumentsPage';
+import ReviewPage from '../features/documents/ReviewPage';
 import HomePage from '../features/home/HomePage';
 
 function Shell() {
@@ -47,12 +48,16 @@ function Shell() {
           </Button>
         </Toolbar>
       </AppBar>
-      <Container maxWidth="md" sx={{ mt: 4, mb: 6 }}>
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 6 }}>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/clients" element={<ClientsPage />} />
           <Route path="/clients/:clientId" element={<ClientDetailPage />} />
           <Route path="/clients/:clientId/periods/:periodId" element={<DocumentsPage />} />
+          <Route
+            path="/clients/:clientId/periods/:periodId/documents/:documentId/review"
+            element={<ReviewPage />}
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Container>

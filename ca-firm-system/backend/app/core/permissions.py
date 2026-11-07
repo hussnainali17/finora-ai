@@ -23,6 +23,9 @@ PERMISSIONS: Final[dict[str, str]] = {
     "document:read": "List and download documents of accessible clients",
     "document:upload": "Upload documents to open accounting periods of accessible clients",
     "document:delete": "Remove (soft-delete) documents; the original object is retained",
+    "extraction:read": "View extracted data, column mappings and data-quality findings",
+    "extraction:review": "Correct column mappings / table types and resolve data-quality findings",
+    "extraction:run": "Re-run extraction for a document",
 }
 
 FIRM_ADMIN = "firm_admin"
@@ -53,6 +56,9 @@ ROLES: Final[dict[str, tuple[str, str, frozenset[str]]]] = {
                 "document:read",
                 "document:upload",
                 "document:delete",
+                "extraction:read",
+                "extraction:review",
+                "extraction:run",
             }
         ),
     ),
@@ -67,13 +73,16 @@ ROLES: Final[dict[str, tuple[str, str, frozenset[str]]]] = {
                 "period:update",
                 "document:read",
                 "document:upload",
+                "extraction:read",
+                "extraction:review",
+                "extraction:run",
             }
         ),
     ),
     CLIENT_USER: (
         "Read-only Client User",
         "Client-portal user: read-only access to assigned clients only.",
-        frozenset({"client:read", "period:read", "document:read"}),
+        frozenset({"client:read", "period:read", "document:read", "extraction:read"}),
     ),
 }
 

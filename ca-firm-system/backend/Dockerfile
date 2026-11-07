@@ -4,6 +4,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
 
+# Tesseract is used for OCR of scanned PDFs/images (Agent 1). Parsing runs in-process for now;
+# sandboxing of untrusted-file parsing is a Phase 11 hardening item.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends tesseract-ocr \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # Install dependencies (editable so the bind-mounted source is used in development)

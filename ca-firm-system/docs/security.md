@@ -48,3 +48,22 @@ asymmetric keys if tokens are ever verified by other services); no MFA; no email
 admin sets passwords); two browser tabs refreshing simultaneously are handled by a single-flight lock in
 the frontend, but two *separate devices* sharing one cookie jar would trip reuse detection and be signed
 out. This document makes no compliance or certification claims.
+
+## Phase 3 additions
+
+21. **Untrusted-file parsing is in-process.** Caps: `MAX_UPLOAD_BYTES`, `INTAKE_MAX_UNCOMPRESSED_BYTES`
+    (zip-bomb guard for .xlsx), `INTAKE_MAX_PAGES`, `INTAKE_MAX_ROWS`, OCR timeout. Parsers raise clean
+    `ExtractionError`s; unexpected exceptions are logged server-side and reported to users only as
+    `internal_error`. **A malicious file that exploits a parser library (PyMuPDF, openpyxl, Tesseract,
+    OCRmyPDF) could still affect the backend process.** Run parsing in an isolated
+    process/container with no network or secrets before onboarding untrusted clients (Phase 11).
+22. **Spreadsheet formulas are never evaluated** (openpyxl reads cached values); macros are rejected at upload.
+    Normalized text has control characters stripped.
+23. **LLM egress.** Only column headers and up to 5 truncated (60-character) sample values per column are sent,
+    through LiteLLM with the server-side key. Responses are validated against closed enums and capped in
+    confidence; the model cannot add, change or remove data. Disable with `INTAKE_LLM_ENABLED=false`.
+24. **Authorization.** `extraction:read` / `extraction:review` / `extraction:run`; permission is checked before
+    scope; tables and findings are reachable only through their own in-scope document's *current* run (ids from
+    another document, client or firm return 404). Every correction is audited with before/after values.
+25. **Integrity.** Raw extracted cells and the original object are never modified by corrections; `extraction_runs`
+    carry a composite FK to `documents(id, client_id)` and every extraction table repeats firm/client/period ids.

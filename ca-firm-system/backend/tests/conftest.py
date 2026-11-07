@@ -21,6 +21,8 @@ os.environ.update(
         "LOGIN_MAX_FAILED_ATTEMPTS": "5",
         "OUTBOX_RELAY_ENABLED": "false",  # tests drive the relay explicitly
         "MAX_UPLOAD_BYTES": "1048576",  # 1 MiB so size-limit tests stay fast
+        "INTAKE_ENABLED": "false",  # tests call the extraction service directly
+        "INTAKE_LLM_ENABLED": "false",  # no LiteLLM in tests; assistants are injected
     }
 )
 

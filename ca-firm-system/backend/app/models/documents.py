@@ -65,6 +65,8 @@ class Document(Base):
             ondelete="RESTRICT",
         ),
         UniqueConstraint("object_key", name="uq_documents_object_key"),
+        # Target for extraction_runs' (document_id, client_id) foreign key.
+        UniqueConstraint("id", "client_id", name="uq_documents_id_client_id"),
         CheckConstraint(f"category IN ({_in(DOCUMENT_CATEGORIES)})", name="category_valid"),
         CheckConstraint(f"status IN ({_in(DOCUMENT_STATUSES)})", name="status_valid"),
         CheckConstraint("size_bytes > 0", name="size_positive"),

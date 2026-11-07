@@ -4,9 +4,12 @@ AI-assisted **accounting review and financial reporting** platform for a CA firm
 supply Excel/CSV/PDF records; this system imports, reviews, reconciles and reports on them.
 It does **not** create a ledger, post transactions or do bookkeeping, tax or audit work.
 
-> **Status: Phase 2 - client workspace and file management.** Sign in, browse clients and accounting periods,
-> upload/list/download/remove client files (stored immutably in object storage), with role- and client-level
-> access control, duplicate detection, an audit trail and a `file.uploaded` event. No accounting parsing yet. See the roadmap for the phase plan.
+> **Status: Phase 3 - data extraction and structuring (Agent 1).** Sign in, browse clients and accounting periods,
+> upload client files (stored immutably in object storage), and have them read into structured, reviewable
+> tables: Excel/CSV/digital-PDF/scanned (OCR) parsing, table and header detection, document-type and column-role
+> classification, date/amount normalization, and data-quality findings. Reviewers confirm or correct column
+> roles and document types on a review screen; originals and raw extracted cells are never modified.
+> No reconciliation, adjustments or reporting yet. See the roadmap for the phase plan.
 
 ## Stack
 React + TypeScript + MUI · FastAPI · PostgreSQL · Redis · Kafka (KRaft) · MinIO · LiteLLM Proxy · Docker Compose · Nginx
@@ -78,6 +81,12 @@ cd backend && pytest
 Storage tests use an in-process S3 server (moto) and Kafka is faked, so no MinIO/Kafka is needed. Without
 `TEST_DATABASE_URL` those tests are skipped (health/config tests still run) - CI always sets it.
 
+**Extraction (Phase 3).** A background runner in the backend picks up `uploaded`/`queued` documents and
+extracts them (`INTAKE_ENABLED`). OCR needs the `tesseract-ocr` package (installed in the backend image and in
+CI; for local runs: `apt install tesseract-ocr`). The optional AI assist for ambiguous columns calls LiteLLM only
+(`INTAKE_LLM_*`) and is off-switchable (`INTAKE_LLM_ENABLED=false`); heuristics work without it.
+Tests call the extraction service directly (`INTAKE_ENABLED=false`).
+
 ## Configuration and secrets
 See [docs/security.md](docs/security.md). Short version: `.env` is never committed, provider keys exist only in the
 `litellm` container, and the browser only talks to the backend.
@@ -88,6 +97,13 @@ See [docs/security.md](docs/security.md). Short version: `.env` is never committ
   `litellm` image tags before staging.
 - Kafka readiness is a TCP check; workers do not consume topics yet (Phase 5).
 - LiteLLM has no approved models configured yet (Phase 4).
+- Phase 3: untrusted files are parsed **in-process** (size, page, row and uncompressed-size caps only);
+  sandboxing is Phase 11. Detection is heuristic and English-centric; header recognition covers common
+  accounting terms, not every language. Column roles are chosen per column, not per row, and merged
+  multi-level headers beyond two rows are not combined. The extraction runner polls the database; it does not
+  yet consume the `file.uploaded` Kafka event (Phase 5). The LiteLLM client is tested against a stub HTTP server
+  only - no real LiteLLM/model was exercised, and no model aliases exist until Phase 4. Extraction results are
+  review data, not ledger entries.
 - Phase 2: uploaded files are NOT malware-scanned yet (hook only); the Kafka producer is tested with a fake
   broker only (no broker in the authoring environment), and `file.uploaded` has no consumer until Phase 3/5;
   orphan-object reconciliation is Phase 11.

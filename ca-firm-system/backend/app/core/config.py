@@ -61,6 +61,25 @@ class Settings(BaseSettings):
     outbox_relay_enabled: bool = True
     outbox_poll_interval_seconds: float = Field(default=2.0, gt=0)
 
+    # --- Data intake / Agent 1 (Phase 3) -------------------------------------------
+    # Background loop that extracts uploaded files. Disabled in tests (they call the service).
+    intake_enabled: bool = True
+    intake_poll_interval_seconds: float = Field(default=3.0, gt=0)
+    intake_stale_after_minutes: int = Field(default=15, ge=1)
+    intake_max_rows: int = Field(default=100_000, ge=100)  # rows kept per table; excess is flagged
+    intake_max_pages: int = Field(default=300, ge=1)
+    intake_max_uncompressed_bytes: int = Field(default=500 * 1024 * 1024, ge=1024)  # zip-bomb guard
+    # Used only when a date such as 03/04/2025 cannot be resolved from the data itself.
+    intake_default_date_order: Literal["DMY", "MDY"] = "DMY"
+    intake_ocr_enabled: bool = True
+    intake_ocr_timeout_seconds: int = Field(default=300, ge=10)
+    intake_ocr_language: str = "eng"
+    # LLM assistance for ambiguous column/document-type interpretation, via LiteLLM only.
+    intake_llm_enabled: bool = True
+    intake_llm_model: str = "intake-default"  # a LiteLLM model alias (Phase 4 manages aliases)
+    intake_llm_timeout_seconds: float = Field(default=30.0, gt=0)
+    intake_llm_min_confidence: float = Field(default=0.7, ge=0, le=1)
+
     @property
     def upload_extensions(self) -> frozenset[str]:
         return frozenset(

@@ -7,12 +7,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.agents.intake_agent.service import run_intake_loop
 from app.api.router import api_router
 from app.core.config import get_settings
 from app.core.errors import register_error_handlers
 from app.core.logging import client_ip_var, configure_logging, correlation_id_var
 from app.db.session import get_sessionmaker
 from app.integrations.kafka.publisher import KafkaEventPublisher, get_event_publisher
+from app.integrations.storage.s3 import get_object_store
 from app.services.outbox import run_relay
 
 logger = logging.getLogger("app")
@@ -37,8 +39,16 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
                 stop=stop,
             )
         )
+    intake: asyncio.Task[None] | None = None
+    if settings.intake_enabled:
+        # Extracts uploaded files (Agent 1). Independent of Kafka; safe with many replicas.
+        intake = asyncio.create_task(
+            run_intake_loop(get_sessionmaker(), get_object_store(), settings, stop)
+        )
     yield
     stop.set()
+    if intake is not None:
+        await intake
     if relay is not None:
         await relay
         publisher = get_event_publisher()
@@ -49,7 +59,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 def create_app() -> FastAPI:
     settings = get_settings()
-    app = FastAPI(title="CA Firm System API", version="0.3.0", lifespan=lifespan)
+    app = FastAPI(title="CA Firm System API", version="0.4.0", lifespan=lifespan)
 
     app.add_middleware(
         CORSMiddleware,

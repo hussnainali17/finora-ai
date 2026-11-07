@@ -1,4 +1,4 @@
-# API contracts (Phase 1 + Phase 2)
+# API contracts (Phase 1 - 3)
 
 Base path `/api/v1`. JSON. Errors: `{"detail": "<message>"}` (422 validation errors use FastAPI's list
 form). Authenticated routes need `Authorization: Bearer <access token>`. Interactive docs: `/docs`.
@@ -62,6 +62,43 @@ Accepted types (configurable): pdf, xlsx, xls, csv, png, jpg/jpeg. The extension
 **and** the bytes must match it (PDF/PNG/JPEG/OLE signatures; xlsx must be a zip containing
 `[Content_Types].xml` and `xl/`; csv must be NUL-free text). Macro-enabled workbooks (.xlsm) and other
 formats are rejected. Max size `MAX_UPLOAD_BYTES` (50 MiB).
+
+## Extraction (Phase 3) - `/clients/{client_id}/periods/{period_id}/documents/{document_id}/extraction`
+The document must be live and in the caller's client scope (else 404). Extraction runs automatically after upload.
+| Method & path | Permission | Notes |
+|---|---|---|
+| `GET` | `extraction:read` | `ExtractionOut`: `document_status`, current `run` (`version`, `status` running/completed/failed, `trigger`, `error_code`, `error_message`, `summary`, `llm_used`), `tables[]`, open-finding counts by severity. `run` is null until a run exists. |
+| `GET /tables/{table_id}/rows?limit&offset&flagged_only` | `extraction:read` | `Page<RowOut>`: `{row_index (source row number), source_ref, raw: {col: {v, t}}, normalized: {col: string\|null}, flags[]}`. limit 1-200. Amounts are fixed-point Decimal strings (`"1234.50"`), dates ISO (`"2025-06-30"`). |
+| `PATCH /tables/{table_id}/columns/{col_index}` `{role}` | `extraction:review` | Sets the confirmed role, recomputes normalized values for the table, resolves related findings. 422 unknown role, 404 unknown table/column. Returns `TableOut`. |
+| `PATCH /tables/{table_id}` `{confirmed_type}` | `extraction:review` | Sets the confirmed document type. 422 unknown type. |
+| `GET /findings?status&severity` | `extraction:read` | Ordered error, warning, info. |
+| `PATCH /findings/{finding_id}` `{status: open\|resolved\|dismissed, note?}` | `extraction:review` | `error` findings cannot be dismissed (422). |
+| `POST /rerun` -> 202 | `extraction:run` | Queues the document; 409 if already queued/uploaded/processing. A new run version is created; confirmed roles/types carry over. |
+
+`TableOut`: `{id, ordinal, name, kind, n_rows, n_cols, header_row, has_header, detected_type, type_confidence,
+type_source (heuristic|llm), confirmed_type, effective_type, currency, period_start, period_end,
+status (ok|needs_review|ignored), open_findings, columns[]}`; column: `{col_index, letter, header,
+header_synthetic, suggested_role, confidence, role_source (header|content|combined|llm|none),
+confirmed_role, effective_role}`.
+
+Column roles: account_code, account_name, description, date, value_date, debit, credit, withdrawal, deposit,
+amount, balance, quantity, unit_cost, reference, party, currency, item_code, cost, depreciation,
+accumulated_depreciation, net_book_value, gross_pay, deductions, net_pay, other, ignore.
+Document types: trial_balance, general_ledger, bank_statement, sales_ledger, purchase_ledger,
+fixed_asset_register, inventory_report, payroll_schedule, text_document, unknown. (These describe the
+*client's file*; the system holds no ledger.)
+
+Finding codes (non-exhaustive): `hidden_sheet`, `rows_truncated`, `extra_blocks_ignored`, `no_header_row`,
+`blank_rows_skipped`, `unknown_document_type`, `type_mismatch`, `low_confidence_column`,
+`llm_suggested_role`, `llm_suggested_type`, `ambiguous_date_order`, `date_order_inferred`,
+`mixed_date_formats`, `invalid_amounts`, `european_number_format`, `ambiguous_currency`,
+`period_mismatch`, `ocr_applied`, `ocr_unavailable`, `no_table_found`, `spreadsheet_errors`.
+Row flags: `total_row`, `duplicate_row`, `invalid_amount`, `invalid_date`, `ambiguous_date`,
+`sign_convention`, `no_amounts`.
+
+Run failure codes (`run.error_code`): `corrupt_file`, `encrypted_file`, `empty_file`, `no_content`,
+`file_too_large`, `too_many_pages`, `unsupported_type`, `ocr_unavailable`, `ocr_timeout`, `ocr_failed`,
+`interrupted`, `persist_failed`, `internal_error`. Messages are user-safe (no stack traces or paths).
 
 ## Audit
 `GET /audit-events?limit&offset&action&client_id&actor_user_id&since&until` - `audit:read`.
