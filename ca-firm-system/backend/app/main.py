@@ -22,6 +22,26 @@ logger = logging.getLogger("app")
 CORRELATION_HEADER = "X-Request-ID"
 
 
+async def _run_review_loop(
+    session_factory,  # type: ignore[type-arg]
+    stop: asyncio.Event,
+    interval_seconds: float = 5.0,
+) -> None:
+    """Background loop: executes 'running' ReviewRuns via Agent 2."""
+    from app.services.accounting_review import run_pending_reviews
+
+    while not stop.is_set():
+        try:
+            async with session_factory() as session:
+                await run_pending_reviews(session)
+        except Exception:
+            logger.exception("review loop iteration failed")
+        try:
+            await asyncio.wait_for(stop.wait(), timeout=interval_seconds)
+        except TimeoutError:
+            pass
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
@@ -45,10 +65,15 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         intake = asyncio.create_task(
             run_intake_loop(get_sessionmaker(), get_object_store(), settings, stop)
         )
+    # Phase 6: execute 'running' ReviewRuns via Agent 2.
+    review_loop: asyncio.Task[None] = asyncio.create_task(
+        _run_review_loop(get_sessionmaker(), stop)
+    )
     yield
     stop.set()
     if intake is not None:
         await intake
+    await review_loop
     if relay is not None:
         await relay
         publisher = get_event_publisher()
@@ -57,9 +82,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger.info("backend stopping")
 
 
+
 def create_app() -> FastAPI:
     settings = get_settings()
-    app = FastAPI(title="CA Firm System API", version="0.4.0", lifespan=lifespan)
+    app = FastAPI(title="CA Firm System API", version="0.6.0", lifespan=lifespan)
 
     app.add_middleware(
         CORSMiddleware,

@@ -29,6 +29,9 @@ PERMISSIONS: Final[dict[str, str]] = {
     "llm:read": "View approved AI models, agent defaults and the firm model policy",
     "llm:manage": "Enable/disable models, set agent defaults/fallbacks and policy, view usage",
     "llm:select": "Choose an approved model for a specific task when firm policy allows",
+    "review:read": "View accounting review results, findings and reconciliation schedules",
+    "review:manage": "Trigger accounting review runs and configure review settings",
+    "review:resolve": "Update finding status (explained/resolved/escalated) and add reviewer notes",
 }
 
 FIRM_ADMIN = "firm_admin"
@@ -64,6 +67,9 @@ ROLES: Final[dict[str, tuple[str, str, frozenset[str]]]] = {
                 "extraction:run",
                 "llm:read",
                 "llm:select",
+                "review:read",
+                "review:manage",
+                "review:resolve",
             }
         ),
     ),
@@ -82,13 +88,15 @@ ROLES: Final[dict[str, tuple[str, str, frozenset[str]]]] = {
                 "extraction:review",
                 "extraction:run",
                 "llm:read",
+                "review:read",
+                "review:resolve",
             }
         ),
     ),
     CLIENT_USER: (
         "Read-only Client User",
         "Client-portal user: read-only access to assigned clients only.",
-        frozenset({"client:read", "period:read", "document:read", "extraction:read"}),
+        frozenset({"client:read", "period:read", "document:read", "extraction:read", "review:read"}),
     ),
 }
 

@@ -124,3 +124,19 @@ Firm Admin: whole firm. Others with the permission: only events tied to their as
 
 ## Health (unchanged from Phase 0)
 `GET /health/live`, `GET /health/ready`.
+
+## Kafka Topics and Workers (Phase 5) - `/kafka`
+| Method & path | Permission | Notes |
+|---|---|---|
+| `GET /kafka/topics` | `user:manage` | Returns list of configured Kafka topics, their descriptions, DLQ topic names, and consumer groups. |
+
+## Accounting Review & Reconciliation (Phase 6) - `/clients/{client_id}/periods/{period_id}/review`
+| Method & path | Permission | Notes |
+|---|---|---|
+| `POST /` `{modules?: string[]}` | `review:manage` | 201 `ReviewRunOut`. Triggers review run. Idempotent: returns existing active run if already running. |
+| `GET /?limit&offset` | `review:read` | `ReviewRunListOut`. Newest runs first. |
+| `GET /{review_run_id}` | `review:read` | `ReviewRunOut`. Includes `module_summary` with per-module finding/exception counts. |
+| `GET /{review_run_id}/findings?module&severity&status&limit&offset` | `review:read` | `ReviewFindingListOut`. Filter findings by module, severity, and resolution status. |
+| `PATCH /{review_run_id}/findings/{finding_id}` `{status, reviewer_note?}` | `review:resolve` | 200 `ReviewFindingOut`. Status transitions: `open` -> `explained` -> `resolved` / `escalated`. |
+| `GET /{review_run_id}/schedules` | `review:read` | `list[ReconciliationScheduleOut]`. All schedules generated during the run (e.g. AR ageing, bank recon). |
+| `GET /{review_run_id}/schedules/{schedule_id}` | `review:read` | `ReconciliationScheduleOut`. Detailed data payload of a specific schedule. |

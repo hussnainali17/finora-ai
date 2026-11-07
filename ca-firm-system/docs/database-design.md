@@ -188,3 +188,24 @@ Permissions added (mirrored in `app/core/permissions.py`, asserted by a test): `
 accountant), `llm:select` (admin, reviewer), `llm:manage` (admin).
 Audited actions: `llm.model_enabled`, `llm.model_disabled`, `llm.model_tested`, `llm.agent_config_set`,
 `llm.task_override_set`, `llm.task_override_cleared`, `llm.policy_set`.
+
+## Phase 5 additions: worker jobs & consumer idempotency (migration 0005)
+
+| Table | Purpose / key constraints |
+|---|---|
+| `worker_jobs` | Durable tracking of background Kafka message consumption. `UNIQUE (event_id)` ensures consumer idempotency. `status` pending/running/completed/failed; `attempts`, `error_class`, `error_message`, `started_at`, `finished_at`. |
+
+## Phase 6 additions: accounting review & reconciliation (migration 0006)
+
+None of these tables creates or posts ledger entries. They store the outputs of reviewing client-supplied records against accounting standards and reconciliation rules.
+
+| Table | Purpose / key constraints |
+|---|---|
+| `review_runs` | Tracks overall review execution for a client/period. `status` pending/running/completed/failed; `trigger` auto/manual; `module_summary` JSONB (counts of findings and exceptions per module). FK `firm_id -> firms(id)`. |
+| `review_findings` | Findings, discrepancies, and aged items. `module` (sales_receivables, purchases_payables, bank_cash, inventory, fixed_assets, payroll); `severity` info/warning/error; `status` open/explained/resolved/escalated; `source_ref` JSONB (document, table, row traceability); `amount` Numeric(20,4); `evidence_refs` JSONB list. FK `review_run_id -> review_runs(id)`. |
+| `reconciliation_schedules` | Structured reconciliation outputs (e.g. AR ageing schedule, bank reconciliation, inventory movement, PPE schedule, payroll summary). `UNIQUE (review_run_id, module, schedule_type)`. `data` JSONB contains the deterministic calculation results. |
+
+Permissions added (migration 0006, mirrored in `app/core/permissions.py`):
+- `review:read`: View accounting review runs, findings, and schedules (firm_admin, ca_reviewer, accountant, client_user).
+- `review:manage`: Trigger review runs and configure review settings (firm_admin, ca_reviewer).
+- `review:resolve`: Transition finding status (explained/resolved/escalated) and add reviewer notes (firm_admin, ca_reviewer, accountant).

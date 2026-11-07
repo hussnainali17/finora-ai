@@ -3,6 +3,11 @@
 There is intentionally no ledger, journal or bookkeeping model anywhere in this product.
 """
 
+from app.models.accounting_review import (
+    ReconciliationSchedule,
+    ReviewFinding,
+    ReviewRun,
+)
 from app.models.audit import AuditEvent
 from app.models.documents import Document, OutboxEvent
 from app.models.extraction import (
@@ -49,7 +54,10 @@ __all__ = [
     "LlmTaskOverride",
     "OutboxEvent",
     "Permission",
+    "ReconciliationSchedule",
     "RefreshToken",
+    "ReviewFinding",
+    "ReviewRun",
     "Role",
     "RolePermission",
     "User",

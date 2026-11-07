@@ -1,5 +1,6 @@
 import {
   Alert,
+  Box,
   Breadcrumbs,
   Button,
   Chip,
@@ -175,17 +176,30 @@ export default function DocumentsPage() {
       </Breadcrumbs>
 
       <Paper sx={{ p: 3 }}>
-        <Typography variant="h5" component="h2">
-          {period.label} documents
-        </Typography>
-        <Typography color="text.secondary">
-          {formatDate(period.start_date)} – {formatDate(period.end_date)} ·{' '}
-          <Chip
-            size="small"
-            label={period.status}
-            color={period.status === 'open' ? 'success' : 'default'}
-          />
-        </Typography>
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Box>
+            <Typography variant="h5" component="h2">
+              {period.label} documents
+            </Typography>
+            <Typography color="text.secondary">
+              {formatDate(period.start_date)} – {formatDate(period.end_date)} ·{' '}
+              <Chip
+                size="small"
+                label={period.status}
+                color={period.status === 'open' ? 'success' : 'default'}
+              />
+            </Typography>
+          </Box>
+          <Can permission="review:read">
+            <Button
+              variant="outlined"
+              component={RouterLink}
+              to={`/clients/${clientId}/periods/${periodId}/review`}
+            >
+              Accounting Review
+            </Button>
+          </Can>
+        </Stack>
       </Paper>
 
       <Can permission="document:upload">

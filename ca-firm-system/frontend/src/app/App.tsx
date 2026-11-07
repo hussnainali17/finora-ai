@@ -16,6 +16,8 @@ import DocumentsPage from '../features/documents/DocumentsPage';
 import ReviewPage from '../features/documents/ReviewPage';
 import HomePage from '../features/home/HomePage';
 import ModelSettingsPage from '../features/model-settings/ModelSettingsPage';
+import { AccountingReviewPage } from '../features/accounting-review/AccountingReviewPage';
+import { FindingsPage } from '../features/accounting-review/FindingsPage';
 
 function Shell() {
   const { state, logout, can } = useAuth();
@@ -63,6 +65,14 @@ function Shell() {
           <Route
             path="/clients/:clientId/periods/:periodId/documents/:documentId/review"
             element={<ReviewPage />}
+          />
+          <Route
+            path="/clients/:clientId/periods/:periodId/review"
+            element={can('review:read') ? <AccountingReviewPage /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/clients/:clientId/periods/:periodId/review/:reviewRunId/findings"
+            element={can('review:read') ? <FindingsPage /> : <Navigate to="/" replace />}
           />
           <Route
             path="/settings/models"
