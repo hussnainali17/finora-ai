@@ -1,0 +1,29 @@
+groups:
+  - name: ca_firm_alerts
+    rules:
+      - alert: BackendServiceDown
+        expr: up{job="ca-firm-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "CA Firm backend API instance is down"
+          description: "Backend service has been unreachable for more than 1 minute."
+
+      - alert: KafkaConsumerLagHigh
+        expr: kafka_consumergroup_lag{topic="file-uploaded"} > 50
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High Kafka consumer lag on file processing"
+          description: "Kafka consumer group has more than 50 unprocessed messages."
+
+      - alert: OutboxRelayStalled
+        expr: ca_firm_outbox_pending_count > 100
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Transactional outbox relay stalled"
+          description: "Pending outbox messages have accumulated above threshold."

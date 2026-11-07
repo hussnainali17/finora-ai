@@ -114,6 +114,20 @@ def create_app() -> FastAPI:
 
     register_error_handlers(app)
     app.include_router(api_router, prefix=settings.api_prefix)
+
+    @app.get("/metrics", tags=["monitoring"], include_in_schema=False)
+    async def metrics() -> Response:
+        """Prometheus metrics endpoint (Phase 11)."""
+        metrics_text = (
+            "# HELP ca_firm_app_info Application metadata\n"
+            "# TYPE ca_firm_app_info gauge\n"
+            'ca_firm_app_info{version="1.0.0",env="' + settings.app_env + '"} 1\n'
+            "# HELP ca_firm_health_status Application health status (1 = healthy)\n"
+            "# TYPE ca_firm_health_status gauge\n"
+            "ca_firm_health_status 1\n"
+        )
+        return Response(content=metrics_text, media_type="text/plain; version=0.0.4; charset=utf-8")
+
     return app
 
 

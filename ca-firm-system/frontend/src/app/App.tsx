@@ -21,6 +21,7 @@ import { FindingsPage } from '../features/accounting-review/FindingsPage';
 import { AdjustmentsPage } from '../features/adjustments/AdjustmentsPage';
 import { ReportingPage } from '../features/reporting/ReportingPage';
 import { WorkflowBoardPage } from '../features/workflows/WorkflowBoardPage';
+import { AuditLogPage } from '../features/audit/AuditLogPage';
 
 function Shell() {
   const { state, logout, can } = useAuth();
@@ -52,6 +53,11 @@ function Shell() {
           {can('llm:read') && (
             <Button color="inherit" component={RouterLink} to="/settings/models">
               AI models
+            </Button>
+          )}
+          {can('audit:read') && (
+            <Button color="inherit" component={RouterLink} to="/audit">
+              Audit
             </Button>
           )}
           <Button color="inherit" onClick={() => void logout()}>
@@ -92,6 +98,10 @@ function Shell() {
           <Route
             path="/settings/models"
             element={can('llm:read') ? <ModelSettingsPage /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/audit"
+            element={can('audit:read') ? <AuditLogPage /> : <Navigate to="/" replace />}
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
