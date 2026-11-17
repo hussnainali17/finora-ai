@@ -1,0 +1,108 @@
+{
+  "metadata": {
+    "source": "Synthetic dataset derived from USAT account structure",
+    "company": "USAT (United Stitching & Apparel Technologies)",
+    "period": "October 2025",
+    "period_start": "2025-07-01",
+    "period_end": "2025-10-31",
+    "currency": "PKR",
+    "document_type": "accounts_receivable",
+    "description": "Accounts receivable / sales ledger with ageing analysis. Includes overdue debtors, credit note postings, and partial receipts. Used to evaluate sales_receivables module."
+  },
+  "rows": [
+    {
+      "invoice_number": "SI-2025-100",
+      "customer_code": "CUST-001",
+      "customer_name": "Garments Export Ltd",
+      "invoice_date": "2025-07-15",
+      "due_date": "2025-08-14",
+      "amount": 25000000,
+      "amount_received": 20000000,
+      "outstanding_balance": 5000000,
+      "days_overdue": 95,
+      "account_code": "12001001",
+      "account_name": "Trade Debtors - Local"
+    },
+    {
+      "invoice_number": "SI-2025-101",
+      "customer_code": "CUST-002",
+      "customer_name": "Fashion House Ltd",
+      "invoice_date": "2025-08-01",
+      "due_date": "2025-08-31",
+      "amount": 18000000,
+      "amount_received": 18000000,
+      "outstanding_balance": 0,
+      "days_overdue": 0,
+      "account_code": "12001001",
+      "account_name": "Trade Debtors - Local"
+    },
+    {
+      "invoice_number": "SI-2025-150",
+      "customer_code": "CUST-002",
+      "customer_name": "Fashion House Ltd",
+      "invoice_date": "2025-09-15",
+      "due_date": "2025-10-15",
+      "amount": 18000000,
+      "amount_received": 15000000,
+      "outstanding_balance": 3000000,
+      "days_overdue": 16,
+      "account_code": "12001001",
+      "account_name": "Trade Debtors - Local"
+    },
+    {
+      "invoice_number": "SI-2025-200",
+      "customer_code": "CUST-003",
+      "customer_name": "Metro Textile Ltd",
+      "invoice_date": "2025-10-01",
+      "due_date": "2025-10-31",
+      "amount": 32000000,
+      "amount_received": 0,
+      "outstanding_balance": 32000000,
+      "days_overdue": 0,
+      "account_code": "12001001",
+      "account_name": "Trade Debtors - Local"
+    },
+    {
+      "invoice_number": "CR-NOTE-001",
+      "customer_code": "CUST-001",
+      "customer_name": "Garments Export Ltd",
+      "invoice_date": "2025-07-25",
+      "due_date": "2025-07-25",
+      "amount": -2000000,
+      "amount_received": 0,
+      "outstanding_balance": -2000000,
+      "days_overdue": 0,
+      "account_code": "12001001",
+      "account_name": "Trade Debtors - Local",
+      "note": "Credit note for returned goods"
+    },
+    {
+      "invoice_number": "SI-2025-050",
+      "customer_code": "CUST-004",
+      "customer_name": "Alpha Exports (Pvt) Ltd",
+      "invoice_date": "2025-05-01",
+      "due_date": "2025-05-31",
+      "amount": 45000000,
+      "amount_received": 20000000,
+      "outstanding_balance": 25000000,
+      "days_overdue": 153,
+      "account_code": "12001001",
+      "account_name": "Trade Debtors - Local",
+      "note": "OVERDUE > 90 days - potential bad debt"
+    }
+  ],
+  "ageing_buckets_expected": {
+    "current_0_30_days": 32000000,
+    "overdue_31_60_days": 3000000,
+    "overdue_61_90_days": 5000000,
+    "overdue_91_plus_days": 25000000
+  },
+  "expected_checks": {
+    "total_outstanding": 63000000,
+    "overdue_above_90_days": 25000000,
+    "findings_expected": [
+      "ar_overdue_90_plus for CUST-004 Alpha Exports - 25,000,000 PKR",
+      "ar_overdue_60_90 for CUST-001 Garments Export - 5,000,000 PKR"
+    ]
+  }
+}

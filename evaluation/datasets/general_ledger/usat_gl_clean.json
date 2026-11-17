@@ -1,0 +1,201 @@
+{
+  "metadata": {
+    "source": "Derived from USAT Trial Oct-25 (A) (1).xlsx",
+    "company": "USAT (United Stitching & Apparel Technologies)",
+    "period": "October 2025",
+    "period_start": "2025-07-01",
+    "period_end": "2025-10-31",
+    "currency": "PKR",
+    "document_type": "general_ledger",
+    "description": "Clean general ledger - 20 balanced journal entries across multiple accounts with no errors. Used to verify system returns zero findings on clean data."
+  },
+  "rows": [
+    {
+      "date": "2025-07-05",
+      "account_code": "30001001",
+      "account_name": "Local Creditors - Fabric",
+      "description": "Fabric purchase from Textile Mills Ltd",
+      "reference": "PV-2025-001",
+      "debit": 0,
+      "credit": 15000000
+    },
+    {
+      "date": "2025-07-05",
+      "account_code": "60001001",
+      "account_name": "Raw Material - Fabric",
+      "description": "Fabric purchase from Textile Mills Ltd",
+      "reference": "PV-2025-001",
+      "debit": 15000000,
+      "credit": 0
+    },
+    {
+      "date": "2025-07-10",
+      "account_code": "30001001",
+      "account_name": "Local Creditors - Fabric",
+      "description": "Payment to Textile Mills Ltd",
+      "reference": "PV-2025-002",
+      "debit": 12000000,
+      "credit": 0
+    },
+    {
+      "date": "2025-07-10",
+      "account_code": "11200001",
+      "account_name": "Bank - HBL Current Account",
+      "description": "Payment to Textile Mills Ltd",
+      "reference": "PV-2025-002",
+      "debit": 0,
+      "credit": 12000000
+    },
+    {
+      "date": "2025-07-15",
+      "account_code": "40001001",
+      "account_name": "Sales - Local",
+      "description": "Sales to Garments Export Ltd",
+      "reference": "SI-2025-100",
+      "debit": 0,
+      "credit": 25000000
+    },
+    {
+      "date": "2025-07-15",
+      "account_code": "12001001",
+      "account_name": "Trade Debtors - Local",
+      "description": "Sales to Garments Export Ltd",
+      "reference": "SI-2025-100",
+      "debit": 25000000,
+      "credit": 0
+    },
+    {
+      "date": "2025-07-20",
+      "account_code": "12001001",
+      "account_name": "Trade Debtors - Local",
+      "description": "Receipt from Garments Export Ltd",
+      "reference": "CR-2025-050",
+      "debit": 0,
+      "credit": 20000000
+    },
+    {
+      "date": "2025-07-20",
+      "account_code": "11200001",
+      "account_name": "Bank - HBL Current Account",
+      "description": "Receipt from Garments Export Ltd",
+      "reference": "CR-2025-050",
+      "debit": 20000000,
+      "credit": 0
+    },
+    {
+      "date": "2025-07-31",
+      "account_code": "70001001",
+      "account_name": "Salaries Expense",
+      "description": "July 2025 Payroll",
+      "reference": "PR-2025-07",
+      "debit": 8500000,
+      "credit": 0
+    },
+    {
+      "date": "2025-07-31",
+      "account_code": "11200001",
+      "account_name": "Bank - HBL Current Account",
+      "description": "July 2025 Payroll disbursement",
+      "reference": "PR-2025-07",
+      "debit": 0,
+      "credit": 8500000
+    },
+    {
+      "date": "2025-08-05",
+      "account_code": "30001002",
+      "account_name": "Local Creditors - Chemical & Dyes",
+      "description": "Chemical purchase - Dyeing dept",
+      "reference": "PV-2025-050",
+      "debit": 0,
+      "credit": 3200000
+    },
+    {
+      "date": "2025-08-05",
+      "account_code": "60001002",
+      "account_name": "Raw Material - Chemicals",
+      "description": "Chemical purchase - Dyeing dept",
+      "reference": "PV-2025-050",
+      "debit": 3200000,
+      "credit": 0
+    },
+    {
+      "date": "2025-08-15",
+      "account_code": "30001002",
+      "account_name": "Local Creditors - Chemical & Dyes",
+      "description": "Part payment to chemical supplier",
+      "reference": "PV-2025-051",
+      "debit": 2000000,
+      "credit": 0
+    },
+    {
+      "date": "2025-08-15",
+      "account_code": "11200001",
+      "account_name": "Bank - HBL Current Account",
+      "description": "Part payment to chemical supplier",
+      "reference": "PV-2025-051",
+      "debit": 0,
+      "credit": 2000000
+    },
+    {
+      "date": "2025-09-01",
+      "account_code": "80001001",
+      "account_name": "Depreciation Expense - Buildings",
+      "description": "Monthly depreciation - factory buildings",
+      "reference": "JV-2025-200",
+      "debit": 1200000,
+      "credit": 0
+    },
+    {
+      "date": "2025-09-01",
+      "account_code": "15001001",
+      "account_name": "Accumulated Depreciation - Buildings",
+      "description": "Monthly depreciation - factory buildings",
+      "reference": "JV-2025-200",
+      "debit": 0,
+      "credit": 1200000
+    },
+    {
+      "date": "2025-09-15",
+      "account_code": "40001001",
+      "account_name": "Sales - Local",
+      "description": "Sales to Fashion House Ltd",
+      "reference": "SI-2025-150",
+      "debit": 0,
+      "credit": 18000000
+    },
+    {
+      "date": "2025-09-15",
+      "account_code": "12001001",
+      "account_name": "Trade Debtors - Local",
+      "description": "Sales to Fashion House Ltd",
+      "reference": "SI-2025-150",
+      "debit": 18000000,
+      "credit": 0
+    },
+    {
+      "date": "2025-10-10",
+      "account_code": "12001001",
+      "account_name": "Trade Debtors - Local",
+      "description": "Receipt from Fashion House Ltd",
+      "reference": "CR-2025-100",
+      "debit": 0,
+      "credit": 15000000
+    },
+    {
+      "date": "2025-10-10",
+      "account_code": "11200001",
+      "account_name": "Bank - HBL Current Account",
+      "description": "Receipt from Fashion House Ltd",
+      "reference": "CR-2025-100",
+      "debit": 15000000,
+      "credit": 0
+    }
+  ],
+  "expected_checks": {
+    "is_balanced": true,
+    "total_debits": 119900000,
+    "total_credits": 119900000,
+    "total_findings": 0,
+    "accounts": ["30001001", "60001001", "11200001", "40001001", "12001001", "70001001", "30001002", "60001002", "80001001", "15001001"]
+  }
+}

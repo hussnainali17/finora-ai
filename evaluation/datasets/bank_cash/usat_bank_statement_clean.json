@@ -1,0 +1,156 @@
+{
+  "metadata": {
+    "source": "Synthetic dataset derived from USAT account structure",
+    "company": "USAT (United Stitching & Apparel Technologies)",
+    "period": "October 2025",
+    "period_start": "2025-07-01",
+    "period_end": "2025-10-31",
+    "currency": "PKR",
+    "document_type": "bank_statement",
+    "description": "Clean bank statement for HBL Current Account. All entries balance with the GL entries. Used to verify bank reconciliation module with no discrepancies."
+  },
+  "bank_statement": {
+    "bank_name": "Habib Bank Limited",
+    "account_number": "PK36HABB0000123456789012",
+    "account_title": "USAT Pvt Ltd - Current Account",
+    "statement_period_start": "2025-07-01",
+    "statement_period_end": "2025-10-31",
+    "opening_balance": 45000000,
+    "closing_balance": 11300000,
+    "rows": [
+      {
+        "date": "2025-07-10",
+        "value_date": "2025-07-10",
+        "description": "Payment - Textile Mills Ltd",
+        "reference": "PV-2025-002",
+        "withdrawal": 12000000,
+        "deposit": 0,
+        "balance": 33000000
+      },
+      {
+        "date": "2025-07-20",
+        "value_date": "2025-07-20",
+        "description": "Receipt - Garments Export Ltd",
+        "reference": "CR-2025-050",
+        "withdrawal": 0,
+        "deposit": 20000000,
+        "balance": 53000000
+      },
+      {
+        "date": "2025-07-31",
+        "value_date": "2025-07-31",
+        "description": "Payroll July 2025",
+        "reference": "PR-2025-07",
+        "withdrawal": 8500000,
+        "deposit": 0,
+        "balance": 44500000
+      },
+      {
+        "date": "2025-08-15",
+        "value_date": "2025-08-15",
+        "description": "Payment - Chemical Supplier",
+        "reference": "PV-2025-051",
+        "withdrawal": 2000000,
+        "deposit": 0,
+        "balance": 42500000
+      },
+      {
+        "date": "2025-08-31",
+        "value_date": "2025-08-31",
+        "description": "Payroll August 2025",
+        "reference": "PR-2025-08",
+        "withdrawal": 8500000,
+        "deposit": 0,
+        "balance": 34000000
+      },
+      {
+        "date": "2025-09-15",
+        "value_date": "2025-09-15",
+        "description": "Receipt - Fashion House Ltd",
+        "reference": "CR-2025-100",
+        "withdrawal": 0,
+        "deposit": 15000000,
+        "balance": 49000000
+      },
+      {
+        "date": "2025-09-30",
+        "value_date": "2025-09-30",
+        "description": "Payroll September 2025",
+        "reference": "PR-2025-09",
+        "withdrawal": 8500000,
+        "deposit": 0,
+        "balance": 40500000
+      },
+      {
+        "date": "2025-10-10",
+        "value_date": "2025-10-10",
+        "description": "Receipt - Fashion House Ltd",
+        "reference": "CR-2025-101",
+        "withdrawal": 0,
+        "deposit": 15000000,
+        "balance": 55500000
+      },
+      {
+        "date": "2025-10-20",
+        "value_date": "2025-10-20",
+        "description": "Payment - Utility Bills",
+        "reference": "PV-2025-100",
+        "withdrawal": 2000000,
+        "deposit": 0,
+        "balance": 53500000
+      },
+      {
+        "date": "2025-10-31",
+        "value_date": "2025-10-31",
+        "description": "Payroll October 2025",
+        "reference": "PR-2025-10",
+        "withdrawal": 8500000,
+        "deposit": 0,
+        "balance": 45000000
+      },
+      {
+        "date": "2025-10-31",
+        "value_date": "2025-10-31",
+        "description": "Bank charges October 2025",
+        "reference": "BC-2025-10",
+        "withdrawal": 25000,
+        "deposit": 0,
+        "balance": 44975000
+      },
+      {
+        "date": "2025-10-31",
+        "value_date": "2025-10-31",
+        "description": "Profit on deposit October 2025",
+        "reference": "POD-2025-10",
+        "withdrawal": 0,
+        "deposit": 125000,
+        "balance": 45100000
+      }
+    ]
+  },
+  "cash_book": {
+    "opening_balance": 45000000,
+    "closing_balance": 45100000,
+    "total_withdrawals": 49525000,
+    "total_deposits": 50125000,
+    "rows": [
+      {"date": "2025-07-10", "reference": "PV-2025-002", "description": "Payment Textile Mills", "debit": 0, "credit": 12000000},
+      {"date": "2025-07-20", "reference": "CR-2025-050", "description": "Receipt Garments Export", "debit": 20000000, "credit": 0},
+      {"date": "2025-07-31", "reference": "PR-2025-07", "description": "Payroll July", "debit": 0, "credit": 8500000},
+      {"date": "2025-08-15", "reference": "PV-2025-051", "description": "Chemical Supplier", "debit": 0, "credit": 2000000},
+      {"date": "2025-08-31", "reference": "PR-2025-08", "description": "Payroll August", "debit": 0, "credit": 8500000},
+      {"date": "2025-09-15", "reference": "CR-2025-100", "description": "Receipt Fashion House", "debit": 15000000, "credit": 0},
+      {"date": "2025-09-30", "reference": "PR-2025-09", "description": "Payroll September", "debit": 0, "credit": 8500000},
+      {"date": "2025-10-10", "reference": "CR-2025-101", "description": "Receipt Fashion House", "debit": 15000000, "credit": 0},
+      {"date": "2025-10-20", "reference": "PV-2025-100", "description": "Utility Bills", "debit": 0, "credit": 2000000},
+      {"date": "2025-10-31", "reference": "PR-2025-10", "description": "Payroll October", "debit": 0, "credit": 8500000},
+      {"date": "2025-10-31", "reference": "BC-2025-10", "description": "Bank charges", "debit": 0, "credit": 25000},
+      {"date": "2025-10-31", "reference": "POD-2025-10", "description": "Profit on deposit", "debit": 125000, "credit": 0}
+    ]
+  },
+  "expected_checks": {
+    "unreconciled_items": 0,
+    "is_balanced": true,
+    "total_findings": 0
+  }
+}

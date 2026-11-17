@@ -1,0 +1,182 @@
+{
+  "metadata": {
+    "source": "Derived from USAT Trial Oct-25 — deliberately corrupted for evaluation",
+    "company": "USAT (United Stitching & Apparel Technologies)",
+    "period": "October 2025",
+    "period_start": "2025-07-01",
+    "period_end": "2025-10-31",
+    "currency": "PKR",
+    "document_type": "general_ledger",
+    "description": "General ledger with 5 intentional errors: missing date, out-of-period entry, duplicate transaction, GL/TB discrepancy, and unusually large transaction. Used to verify the system detects all error types."
+  },
+  "rows": [
+    {
+      "date": "2025-07-05",
+      "account_code": "30001001",
+      "account_name": "Local Creditors - Fabric",
+      "description": "Fabric purchase - Textile Mills",
+      "reference": "PV-2025-001",
+      "debit": 0,
+      "credit": 15000000
+    },
+    {
+      "date": "2025-07-05",
+      "account_code": "60001001",
+      "account_name": "Raw Material - Fabric",
+      "description": "Fabric purchase - Textile Mills",
+      "reference": "PV-2025-001",
+      "debit": 15000000,
+      "credit": 0
+    },
+    {
+      "date": null,
+      "account_code": "11200001",
+      "account_name": "Bank - HBL Current Account",
+      "description": "Bank transfer",
+      "reference": "BT-2025-010",
+      "debit": 5000000,
+      "credit": 0,
+      "_error_injected": "MISSING DATE - should trigger gl_missing_field finding"
+    },
+    {
+      "date": "2025-07-10",
+      "account_code": "30001001",
+      "account_name": "Local Creditors - Fabric",
+      "description": "Payment to Textile Mills Ltd",
+      "reference": "PV-2025-002",
+      "debit": 12000000,
+      "credit": 0
+    },
+    {
+      "date": "2025-07-10",
+      "account_code": "11200001",
+      "account_name": "Bank - HBL Current Account",
+      "description": "Payment to Textile Mills Ltd",
+      "reference": "PV-2025-002",
+      "debit": 0,
+      "credit": 12000000
+    },
+    {
+      "date": "2024-12-31",
+      "account_code": "70001001",
+      "account_name": "Salaries Expense",
+      "description": "Previous year salary adjustment",
+      "reference": "JV-ADJ-001",
+      "debit": 1200000,
+      "credit": 0,
+      "_error_injected": "OUT-OF-PERIOD ENTRY - date 2024-12-31 is outside period 2025-07-01 to 2025-10-31"
+    },
+    {
+      "date": "2024-12-31",
+      "account_code": "11200001",
+      "account_name": "Bank - HBL Current Account",
+      "description": "Previous year salary adjustment offset",
+      "reference": "JV-ADJ-001",
+      "debit": 0,
+      "credit": 1200000,
+      "_error_injected": "OUT-OF-PERIOD ENTRY - same journal as above"
+    },
+    {
+      "date": "2025-08-15",
+      "account_code": "40001001",
+      "account_name": "Sales - Local",
+      "description": "Sales to Garments Export Ltd",
+      "reference": "SI-2025-100",
+      "debit": 0,
+      "credit": 18000000
+    },
+    {
+      "date": "2025-08-15",
+      "account_code": "12001001",
+      "account_name": "Trade Debtors - Local",
+      "description": "Sales to Garments Export Ltd",
+      "reference": "SI-2025-100",
+      "debit": 18000000,
+      "credit": 0
+    },
+    {
+      "date": "2025-08-15",
+      "account_code": "40001001",
+      "account_name": "Sales - Local",
+      "description": "Sales to Garments Export Ltd",
+      "reference": "SI-2025-100",
+      "debit": 0,
+      "credit": 18000000,
+      "_error_injected": "DUPLICATE of row above (same date, reference, amounts, description)"
+    },
+    {
+      "date": "2025-08-15",
+      "account_code": "12001001",
+      "account_name": "Trade Debtors - Local",
+      "description": "Sales to Garments Export Ltd",
+      "reference": "SI-2025-100",
+      "debit": 18000000,
+      "credit": 0,
+      "_error_injected": "DUPLICATE of row above"
+    },
+    {
+      "date": "2025-09-01",
+      "account_code": "80001001",
+      "account_name": "Depreciation Expense - Buildings",
+      "description": "Monthly depreciation",
+      "reference": "JV-2025-200",
+      "debit": 1200000,
+      "credit": 0
+    },
+    {
+      "date": "2025-09-01",
+      "account_code": "15001001",
+      "account_name": "Accumulated Depreciation - Buildings",
+      "description": "Monthly depreciation",
+      "reference": "JV-2025-200",
+      "debit": 0,
+      "credit": 1200000
+    },
+    {
+      "date": "2025-10-01",
+      "account_code": "80001001",
+      "account_name": "Depreciation Expense - Buildings",
+      "description": "Monthly depreciation",
+      "reference": "JV-2025-201",
+      "debit": 1200000,
+      "credit": 0
+    },
+    {
+      "date": "2025-10-01",
+      "account_code": "15001001",
+      "account_name": "Accumulated Depreciation - Buildings",
+      "description": "Monthly depreciation",
+      "reference": "JV-2025-201",
+      "debit": 0,
+      "credit": 1200000
+    },
+    {
+      "date": "2025-10-28",
+      "account_code": "70001001",
+      "account_name": "Salaries Expense",
+      "description": "October payroll - unusual supplemental bonus",
+      "reference": "PR-2025-10-BONUS",
+      "debit": 95000000,
+      "credit": 0,
+      "_error_injected": "LARGE TRANSACTION - 95M vs typical 1-8M for this account, should trigger gl_large_transaction"
+    },
+    {
+      "date": "2025-10-28",
+      "account_code": "11200001",
+      "account_name": "Bank - HBL Current Account",
+      "description": "October payroll bonus payment",
+      "reference": "PR-2025-10-BONUS",
+      "debit": 0,
+      "credit": 95000000
+    }
+  ],
+  "expected_checks": {
+    "total_findings_min": 5,
+    "findings_expected": [
+      "gl_missing_field on row 3 (null date)",
+      "gl_out_of_period on rows 6-7 (date 2024-12-31)",
+      "gl_duplicate_transaction on rows 10-11 (SI-2025-100 duplicated)",
+      "gl_large_transaction on row 16 (95000000 PKR bonus vs account mean)"
+    ]
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "metadata": {
+    "source": "USAT Trial Oct-25 (A) (1).xlsx — deliberately corrupted for evaluation",
+    "company": "USAT (United Stitching & Apparel Technologies)",
+    "period": "October 2025",
+    "period_start": "2025-07-01",
+    "period_end": "2025-10-31",
+    "currency": "PKR",
+    "document_type": "trial_balance",
+    "description": "Corrupted trial balance with intentional errors: missing account code, out-of-balance amount, and duplicate entry. Used to verify system detects TB errors."
+  },
+  "rows": [
+    {
+      "account_code": "10001200",
+      "account_name": "SC - Cash - AJ Holding (Pvt) Ltd",
+      "fs_level": "BS",
+      "nature": "Equity",
+      "head": "Equity",
+      "beginning_balance": -7357900,
+      "debits": 0,
+      "credits": 6000000000,
+      "ending_balance": -6007357900
+    },
+    {
+      "account_code": "",
+      "account_name": "",
+      "fs_level": "BS",
+      "nature": "Equity",
+      "head": "Equity",
+      "beginning_balance": null,
+      "debits": null,
+      "credits": null,
+      "ending_balance": null,
+      "_error_injected": "missing_fields: account_code, account_name, all amounts are null"
+    },
+    {
+      "account_code": "30001001",
+      "account_name": "Local Creditors - Fabric",
+      "fs_level": "BS",
+      "nature": "Liability",
+      "head": "Current Liabilities",
+      "beginning_balance": -1127624730,
+      "debits": 4437924382,
+      "credits": 4103183610,
+      "ending_balance": -792883958
+    },
+    {
+      "account_code": "30001001",
+      "account_name": "Local Creditors - Fabric",
+      "fs_level": "BS",
+      "nature": "Liability",
+      "head": "Current Liabilities",
+      "beginning_balance": -1127624730,
+      "debits": 4437924382,
+      "credits": 4103183610,
+      "ending_balance": -792883958,
+      "_error_injected": "DUPLICATE of row above (same account_code, same amounts)"
+    },
+    {
+      "account_code": "11009001",
+      "account_name": "Un-Appropriated Profits",
+      "fs_level": "BS",
+      "nature": "Equity",
+      "head": "Equity",
+      "beginning_balance": -10671140678,
+      "debits": 1796246748,
+      "credits": 999999999,
+      "ending_balance": -99999999,
+      "_error_injected": "credits tampered from 0 to 999999999 to create imbalance"
+    }
+  ],
+  "expected_checks": {
+    "is_balanced": false,
+    "findings_expected": [
+      "missing_fields on row 2 (account_code and amounts null)",
+      "duplicate account 30001001",
+      "imbalance in total debits vs credits"
+    ]
+  }
+}

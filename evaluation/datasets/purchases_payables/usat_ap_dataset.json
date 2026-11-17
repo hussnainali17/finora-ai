@@ -1,0 +1,107 @@
+{
+  "metadata": {
+    "source": "Synthetic dataset derived from USAT account structure (Local Creditors accounts 30001001, 30001002)",
+    "company": "USAT (United Stitching & Apparel Technologies)",
+    "period": "October 2025",
+    "period_start": "2025-07-01",
+    "period_end": "2025-10-31",
+    "currency": "PKR",
+    "document_type": "accounts_payable",
+    "description": "Purchases and payables dataset. Includes GRN vs invoice matching test, unmatched credit notes, and an overdue payable. Used to evaluate purchases_payables module."
+  },
+  "rows": [
+    {
+      "invoice_number": "SUPP-INV-5001",
+      "grn_number": "GRN-2025-001",
+      "supplier_code": "SUPP-001",
+      "supplier_name": "Textile Mills Ltd",
+      "invoice_date": "2025-07-05",
+      "due_date": "2025-08-04",
+      "amount": 15000000,
+      "amount_paid": 12000000,
+      "outstanding_balance": 3000000,
+      "days_overdue": 85,
+      "account_code": "30001001",
+      "account_name": "Local Creditors - Fabric",
+      "grn_amount": 15000000,
+      "matched": true
+    },
+    {
+      "invoice_number": "SUPP-INV-5002",
+      "grn_number": "GRN-2025-010",
+      "supplier_code": "SUPP-002",
+      "supplier_name": "Dyes & Chemicals Co",
+      "invoice_date": "2025-08-05",
+      "due_date": "2025-09-04",
+      "amount": 3200000,
+      "amount_paid": 2000000,
+      "outstanding_balance": 1200000,
+      "days_overdue": 55,
+      "account_code": "30001002",
+      "account_name": "Local Creditors - Chemical & Dyes",
+      "grn_amount": 3200000,
+      "matched": true
+    },
+    {
+      "invoice_number": "SUPP-INV-5003",
+      "grn_number": null,
+      "supplier_code": "SUPP-003",
+      "supplier_name": "Packing Materials Ltd",
+      "invoice_date": "2025-09-20",
+      "due_date": "2025-10-20",
+      "amount": 850000,
+      "amount_paid": 0,
+      "outstanding_balance": 850000,
+      "days_overdue": 11,
+      "account_code": "30001003",
+      "account_name": "Local Creditors - Packing",
+      "grn_amount": null,
+      "matched": false,
+      "note": "Invoice received but no GRN found - potential unmatched invoice"
+    },
+    {
+      "invoice_number": "SUPP-INV-5004",
+      "grn_number": "GRN-2025-050",
+      "supplier_code": "SUPP-001",
+      "supplier_name": "Textile Mills Ltd",
+      "invoice_date": "2025-10-01",
+      "due_date": "2025-10-31",
+      "amount": 22000000,
+      "amount_paid": 0,
+      "outstanding_balance": 22000000,
+      "days_overdue": 0,
+      "account_code": "30001001",
+      "account_name": "Local Creditors - Fabric",
+      "grn_amount": 22000000,
+      "matched": true
+    },
+    {
+      "invoice_number": "SUPP-CR-001",
+      "grn_number": null,
+      "supplier_code": "SUPP-001",
+      "supplier_name": "Textile Mills Ltd",
+      "invoice_date": "2025-07-20",
+      "due_date": "2025-07-20",
+      "amount": -1500000,
+      "amount_paid": 0,
+      "outstanding_balance": -1500000,
+      "days_overdue": 0,
+      "account_code": "30001001",
+      "account_name": "Local Creditors - Fabric",
+      "grn_amount": null,
+      "matched": false,
+      "note": "Supplier credit note for returned fabric - unapplied"
+    }
+  ],
+  "expected_checks": {
+    "total_outstanding": 25550000,
+    "unmatched_invoices": 1,
+    "unapplied_credit_notes": 1,
+    "overdue_above_60_days": 4200000,
+    "findings_expected": [
+      "ap_unmatched_invoice for SUPP-INV-5003 (no GRN)",
+      "ap_unapplied_credit_note for SUPP-CR-001",
+      "ap_overdue for SUPP-INV-5001 (85 days overdue, 3,000,000 PKR)"
+    ]
+  }
+}
