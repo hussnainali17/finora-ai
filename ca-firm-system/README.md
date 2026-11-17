@@ -1,5 +1,9 @@
 # CA Firm System
 
+## Development roadmap
+
+See the [CA Firm System Development README](../CA_Firm_System_Development_README.md) for the full development roadmap and AI build prompts.
+
 AI-assisted **accounting review and financial reporting** platform for a CA firm. Clients keep their own books and
 supply Excel/CSV/PDF records; this system imports, reviews, reconciles and reports on them.
 It does **not** create a ledger, post transactions or do bookkeeping, tax or audit work.
