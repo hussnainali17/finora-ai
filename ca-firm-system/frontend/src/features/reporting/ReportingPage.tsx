@@ -12,8 +12,12 @@ import {
   DialogContent,
   DialogTitle,
   Divider,
+  FormControl,
   Grid,
+  InputLabel,
+  MenuItem,
   Paper,
+  Select,
   Stack,
   Tab,
   Table,
@@ -25,7 +29,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { CheckCircle, Download, Error, Refresh, TaskAlt } from '@mui/icons-material';
+import { CheckCircle, Download, Error as ErrorIcon, Refresh, TaskAlt } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
 import {
   generateReports,
@@ -63,7 +67,11 @@ export function ReportingPage(): React.JSX.Element {
       const data = await listReports(clientId, periodId);
       setReports(data.items);
       if (data.items.length > 0) {
-        setSelectedReport(data.items[0]);
+        // Prioritize full_pack report over individual reports
+        const fullPack = data.items.find((r) => r.report_type === 'full_pack');
+        setSelectedReport(fullPack ?? data.items[0]);
+      } else {
+        setSelectedReport(null);
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Failed to load financial reports');
@@ -112,9 +120,9 @@ export function ReportingPage(): React.JSX.Element {
 
   const repData = selectedReport?.data ?? {};
   const validation = selectedReport?.validation_results;
-  const adjTbRows = repData.adjusted_tb?.rows ?? [];
-  const pl = repData.profit_and_loss ?? {};
-  const bs = repData.balance_sheet ?? {};
+  const adjTbRows = (repData.adjusted_tb?.rows ?? repData.rows ?? []) as Array<any>;
+  const pl = (repData.profit_and_loss ?? {}) as Record<string, any>;
+  const bs = (repData.balance_sheet ?? {}) as Record<string, any>;
 
   return (
     <Box sx={{ p: 3 }}>
@@ -127,7 +135,27 @@ export function ReportingPage(): React.JSX.Element {
             Adjusted Trial Balance (Original TB + Approved Adjustments) and generated statements.
           </Typography>
         </Box>
-        <Stack direction="row" spacing={1}>
+        <Stack direction="row" spacing={1} alignItems="center">
+          {reports.length > 1 && (
+            <FormControl size="small" sx={{ minWidth: 260 }}>
+              <InputLabel id="report-select-label">Select Report</InputLabel>
+              <Select
+                labelId="report-select-label"
+                label="Select Report"
+                value={selectedReport?.id ?? ''}
+                onChange={(e) => {
+                  const found = reports.find((r) => r.id === e.target.value);
+                  if (found) setSelectedReport(found);
+                }}
+              >
+                {reports.map((r) => (
+                  <MenuItem key={r.id} value={r.id}>
+                    {r.report_type === 'full_pack' ? 'Full Statements Pack' : r.report_type.replace(/_/g, ' ').toUpperCase()} (v{r.version} - {new Date(r.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
           <Button variant="outlined" startIcon={<Refresh />} onClick={() => void fetchReports()} disabled={loading}>
             Refresh
           </Button>
@@ -173,7 +201,7 @@ export function ReportingPage(): React.JSX.Element {
               {validation.is_valid ? (
                 <CheckCircle color="success" />
               ) : (
-                <Error color="error" />
+                <ErrorIcon color="error" />
               )}
               <Typography variant="subtitle1" fontWeight="bold">
                 Validation Summary: {validation.is_valid ? 'All Integrity Checks Passed' : 'Validation Issues Detected'}
@@ -229,25 +257,33 @@ export function ReportingPage(): React.JSX.Element {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {adjTbRows.map((r: any, idx: number) => (
-                    <TableRow key={idx} hover>
-                      <TableCell>{r.account_code}</TableCell>
-                      <TableCell>{r.account_name}</TableCell>
-                      <TableCell align="right">{Number(r.original_debit).toLocaleString()}</TableCell>
-                      <TableCell align="right">{Number(r.original_credit).toLocaleString()}</TableCell>
-                      <TableCell align="right">{Number(r.adjustment_debit) > 0 ? Number(r.adjustment_debit).toLocaleString() : '—'}</TableCell>
-                      <TableCell align="right">{Number(r.adjustment_credit) > 0 ? Number(r.adjustment_credit).toLocaleString() : '—'}</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{Number(r.final_debit).toLocaleString()}</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 'bold' }}>{Number(r.final_credit).toLocaleString()}</TableCell>
+                  {adjTbRows.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                        No account balances found in this report.
+                      </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    adjTbRows.map((r: any, idx: number) => (
+                      <TableRow key={idx} hover>
+                        <TableCell>{r.account_code}</TableCell>
+                        <TableCell>{r.account_name}</TableCell>
+                        <TableCell align="right">{Number(r.original_debit).toLocaleString()}</TableCell>
+                        <TableCell align="right">{Number(r.original_credit).toLocaleString()}</TableCell>
+                        <TableCell align="right">{Number(r.adjustment_debit) > 0 ? Number(r.adjustment_debit).toLocaleString() : '—'}</TableCell>
+                        <TableCell align="right">{Number(r.adjustment_credit) > 0 ? Number(r.adjustment_credit).toLocaleString() : '—'}</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>{Number(r.final_debit).toLocaleString()}</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 'bold' }}>{Number(r.final_credit).toLocaleString()}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
                   <TableRow sx={{ bgcolor: 'action.hover' }}>
                     <TableCell colSpan={2}><strong>Total</strong></TableCell>
-                    <TableCell align="right"><strong>{repData.original_tb_summary?.total_debit}</strong></TableCell>
-                    <TableCell align="right"><strong>{repData.original_tb_summary?.total_credit}</strong></TableCell>
+                    <TableCell align="right"><strong>{repData.original_tb_summary?.total_debit ?? repData.total_debit ?? '0'}</strong></TableCell>
+                    <TableCell align="right"><strong>{repData.original_tb_summary?.total_credit ?? repData.total_credit ?? '0'}</strong></TableCell>
                     <TableCell colSpan={2} />
-                    <TableCell align="right"><strong>{repData.adjusted_tb?.total_debit}</strong></TableCell>
-                    <TableCell align="right"><strong>{repData.adjusted_tb?.total_credit}</strong></TableCell>
+                    <TableCell align="right"><strong>{repData.adjusted_tb?.total_debit ?? repData.total_debit ?? '0'}</strong></TableCell>
+                    <TableCell align="right"><strong>{repData.adjusted_tb?.total_credit ?? repData.total_credit ?? '0'}</strong></TableCell>
                   </TableRow>
                 </TableBody>
               </Table>

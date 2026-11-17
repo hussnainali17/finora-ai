@@ -26,13 +26,14 @@ from app.accounting.reconciliation import (
     ReconciliationResult,
     check_bank_cash,
     check_fixed_assets,
+    check_general_ledger,
     check_inventory,
     check_payroll,
     check_purchases_payables,
     check_sales_receivables,
 )
 from app.accounting.reconciliation._types import FindingData, ScheduleData
-from app.models import ExtractedRow, ExtractedTable
+from app.models import ExtractedColumn, ExtractedRow, ExtractedTable
 from app.models.accounting_review import ReconciliationSchedule, ReviewFinding, ReviewRun
 
 logger = logging.getLogger("app.agents.accounting_review")
@@ -53,6 +54,9 @@ TABLE_TYPE_TO_MODULE: dict[str, str] = {
     "ppe": "fixed_assets",
     "payroll": "payroll",
     "salary": "payroll",
+    # GL and TB routing
+    "general_ledger": "general_ledger",
+    "trial_balance": "trial_balance",
 }
 
 
@@ -101,17 +105,30 @@ class AccountingReviewAgent:
         )
         tables = list(tables_result.scalars().all())
 
-        # Load rows for each table
+        # Load rows for each table with column role mapping
         table_data: list[dict[str, Any]] = []
         for table in tables:
+            cols_result = await session.execute(
+                select(ExtractedColumn).where(ExtractedColumn.table_id == table.id)
+            )
+            cols = list(cols_result.scalars().all())
+            col_map = {str(c.col_index): (c.confirmed_role or c.suggested_role) for c in cols}
+
             rows_result = await session.execute(
                 select(ExtractedRow).where(ExtractedRow.table_id == table.id)
             )
             rows = list(rows_result.scalars().all())
-            normalized_rows = [
-                {**r.normalized, "_row_index": r.row_index, "_source_ref": r.source_ref}
-                for r in rows
-            ]
+            normalized_rows = []
+            for r in rows:
+                norm_dict = dict(r.normalized or {})
+                for col_idx_str, val in (r.normalized or {}).items():
+                    role = col_map.get(col_idx_str)
+                    if role and role not in norm_dict:
+                        norm_dict[role] = val
+                norm_dict["_row_index"] = r.row_index
+                norm_dict["_source_ref"] = r.source_ref
+                normalized_rows.append(norm_dict)
+
             table_data.append(
                 {
                     "table_id": str(table.id),
@@ -135,6 +152,8 @@ class AccountingReviewAgent:
             "inventory_closing": [],
             "fixed_assets": [],
             "payroll": [],
+            "general_ledger": [],
+            "trial_balance": [],
         }
 
         for td in table_data:
@@ -155,6 +174,8 @@ class AccountingReviewAgent:
                     module_tables["inventory_closing"].append(td)
                 else:
                     module_tables["inventory_movement"].append(td)
+            elif module in ("general_ledger", "trial_balance"):
+                module_tables[module].append(td)
             elif module:
                 module_tables[module].append(td)
 
@@ -192,6 +213,12 @@ class AccountingReviewAgent:
             ("payroll", lambda: check_payroll(
                 module_tables["payroll"], period_start, period_end
             )),
+            ("general_ledger", lambda: check_general_ledger(
+                module_tables["general_ledger"],
+                module_tables["trial_balance"],
+                period_start,
+                period_end,
+            )),
         ]
 
         for module_name, run_fn in modules_to_run:
@@ -213,7 +240,7 @@ class AccountingReviewAgent:
                 logger.info(
                     "module completed",
                     extra={
-                        "module": module_name,
+                        "review_module": module_name,
                         "findings": len(result.findings),
                         "exceptions": exception_count,
                     },
@@ -221,7 +248,7 @@ class AccountingReviewAgent:
             except Exception as exc:
                 logger.exception(
                     "module failed",
-                    extra={"module": module_name, "error": str(exc)},
+                    extra={"review_module": module_name, "error": str(exc)},
                 )
                 module_summary[module_name] = {
                     "status": "failed",

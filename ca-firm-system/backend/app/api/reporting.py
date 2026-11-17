@@ -14,7 +14,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, Query, Response
 
-from app.api.deps import PrincipalDep, SessionDep, requires
+from app.api.deps import Principal, SessionDep, requires
 from app.schemas.reporting import (
     FinancialReportListOut,
     FinancialReportOut,
@@ -40,7 +40,7 @@ async def generate_reports(
     period_id: uuid.UUID,
     body: GenerateReportIn,
     session: SessionDep,
-    principal: PrincipalDep = Depends(requires("report:generate")),
+    principal: Principal = Depends(requires("report:generate")),
 ) -> dict:
     return await rep_svc.generate_financial_reports(
         session,
@@ -60,7 +60,7 @@ async def list_reports(
     client_id: uuid.UUID,
     period_id: uuid.UUID,
     session: SessionDep,
-    principal: PrincipalDep = Depends(requires("report:read")),
+    principal: Principal = Depends(requires("report:read")),
     report_type: str | None = Query(default=None),
 ) -> FinancialReportListOut:
     reports = await rep_svc.list_reports(
@@ -86,7 +86,7 @@ async def get_report(
     period_id: uuid.UUID,
     report_id: uuid.UUID,
     session: SessionDep,
-    principal: PrincipalDep = Depends(requires("report:read")),
+    principal: Principal = Depends(requires("report:read")),
 ) -> FinancialReportOut:
     report = await rep_svc.get_report(session, principal, report_id)
     return FinancialReportOut.model_validate(report)
@@ -103,7 +103,7 @@ async def sign_off_report(
     report_id: uuid.UUID,
     body: ReportSignOffIn,
     session: SessionDep,
-    principal: PrincipalDep = Depends(requires("report:sign_off")),
+    principal: Principal = Depends(requires("report:sign_off")),
 ) -> FinancialReportOut:
     report = await rep_svc.sign_off_report(
         session,
@@ -123,7 +123,7 @@ async def export_excel(
     period_id: uuid.UUID,
     report_id: uuid.UUID,
     session: SessionDep,
-    principal: PrincipalDep = Depends(requires("report:read")),
+    principal: Principal = Depends(requires("report:read")),
 ) -> Response:
     from app.agents.reporting_agent.agent import ReportingAgent
 

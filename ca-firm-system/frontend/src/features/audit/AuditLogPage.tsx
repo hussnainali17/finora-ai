@@ -5,11 +5,7 @@ import {
   Button,
   Chip,
   CircularProgress,
-  FormControl,
-  InputLabel,
-  MenuItem,
   Paper,
-  Select,
   Stack,
   Table,
   TableBody,
@@ -20,7 +16,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { History, Refresh } from '@mui/icons-material';
+import { Refresh } from '@mui/icons-material';
 import { listAuditEvents } from '../../services/auditApi';
 import type { AuditEvent } from '../../types/audit';
 import { useAuth } from '../auth/AuthContext';

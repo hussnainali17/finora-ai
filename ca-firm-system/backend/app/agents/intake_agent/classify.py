@@ -154,7 +154,7 @@ _TYPE_RULES: dict[str, dict[str, Any]] = {
                       "forbid": {"date", "withdrawal", "deposit", "balance"}},
     "bank_statement": {"need": [{"date"}, {"withdrawal", "deposit", "debit", "credit", "amount"}],
                        "any": [{"balance", "description"}], "forbid": set()},
-    "general_ledger": {"need": [{"date"}, {"debit"}, {"credit"}], "any": [{"account_name", "account_code", "description"}],
+    "general_ledger": {"need": [{"date"}, {"debit", "amount"}, {"credit", "amount"}], "any": [{"account_name", "account_code", "description", "balance", "reference"}],
                        "forbid": {"withdrawal", "deposit"}},
     "fixed_asset_register": {"need": [{"cost", "net_book_value", "accumulated_depreciation", "depreciation"}],
                              "any": [{"description", "item_code", "account_name"}], "forbid": {"gross_pay"}},

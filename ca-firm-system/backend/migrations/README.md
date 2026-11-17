@@ -1,5 +1,8 @@
 # Database migrations (Alembic)
 
+Alembic reads `DATABASE_URL` from the process environment first, then from the backend `.env` file.
+If the URL includes `schema=...`, the schema is applied through PostgreSQL's `search_path`.
+
 ```bash
 export DATABASE_URL=postgresql://USER:PASSWORD@localhost:5432/DBNAME
 alembic upgrade head        # build / upgrade the schema

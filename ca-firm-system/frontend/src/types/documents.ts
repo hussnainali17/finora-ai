@@ -1,5 +1,6 @@
 export const DOCUMENT_CATEGORIES = [
-  ['trial_balance', 'Trial balance'],
+  ['trial_balance', 'Trial Balance (TB)'],
+  ['general_ledger', 'General Ledger (GL)'],
   ['bank_statement', 'Bank statement'],
   ['invoice', 'Invoice'],
   ['receipt', 'Receipt'],

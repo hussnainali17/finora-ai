@@ -14,7 +14,7 @@ import uuid
 from fastapi import APIRouter, Depends, Query
 
 from app.agents.adjustments_agent.agent import AdjustmentsAgent
-from app.api.deps import PrincipalDep, SessionDep, requires
+from app.api.deps import Principal, SessionDep, requires
 from app.schemas.adjustments import (
     AdjustmentCreateIn,
     AdjustmentDecisionIn,
@@ -39,7 +39,7 @@ async def list_adjustments(
     client_id: uuid.UUID,
     period_id: uuid.UUID,
     session: SessionDep,
-    principal: PrincipalDep = Depends(requires("adjustment:read")),
+    principal: Principal = Depends(requires("adjustment:read")),
     status: str | None = Query(default=None),
     category: str | None = Query(default=None),
     limit: int = Query(default=50, ge=1, le=200),
@@ -71,7 +71,7 @@ async def generate_adjustments(
     client_id: uuid.UUID,
     period_id: uuid.UUID,
     session: SessionDep,
-    principal: PrincipalDep = Depends(requires("adjustment:propose")),
+    principal: Principal = Depends(requires("adjustment:propose")),
 ) -> list[PeriodAdjustmentOut]:
     agent = AdjustmentsAgent()
     generated = await agent.generate_adjustments_for_period(
@@ -94,7 +94,7 @@ async def create_adjustment(
     period_id: uuid.UUID,
     body: AdjustmentCreateIn,
     session: SessionDep,
-    principal: PrincipalDep = Depends(requires("adjustment:propose")),
+    principal: Principal = Depends(requires("adjustment:propose")),
 ) -> PeriodAdjustmentOut:
     adj = await adj_svc.create_adjustment(
         session,
@@ -125,7 +125,7 @@ async def get_adjustment(
     period_id: uuid.UUID,
     adjustment_id: uuid.UUID,
     session: SessionDep,
-    principal: PrincipalDep = Depends(requires("adjustment:read")),
+    principal: Principal = Depends(requires("adjustment:read")),
 ) -> PeriodAdjustmentOut:
     adj = await adj_svc.get_adjustment(session, principal, adjustment_id)
     return PeriodAdjustmentOut.model_validate(adj)
@@ -142,7 +142,7 @@ async def update_adjustment(
     adjustment_id: uuid.UUID,
     body: AdjustmentUpdateIn,
     session: SessionDep,
-    principal: PrincipalDep = Depends(requires("adjustment:propose")),
+    principal: Principal = Depends(requires("adjustment:propose")),
 ) -> PeriodAdjustmentOut:
     adj = await adj_svc.update_adjustment(
         session,
@@ -170,7 +170,7 @@ async def decide_adjustment(
     adjustment_id: uuid.UUID,
     body: AdjustmentDecisionIn,
     session: SessionDep,
-    principal: PrincipalDep = Depends(requires("adjustment:approve")),
+    principal: Principal = Depends(requires("adjustment:approve")),
 ) -> PeriodAdjustmentOut:
     adj = await adj_svc.decide_adjustment(
         session,

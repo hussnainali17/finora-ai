@@ -16,12 +16,14 @@ Imports:
         FindingData, ScheduleData, ReconciliationResult,
         check_sales_receivables, check_purchases_payables,
         check_bank_cash, check_inventory, check_fixed_assets, check_payroll,
+        check_general_ledger,
     )
 """
 
 from app.accounting.reconciliation._types import FindingData, ReconciliationResult, ScheduleData
 from app.accounting.reconciliation.bank_cash import check_bank_cash
 from app.accounting.reconciliation.fixed_assets import check_fixed_assets
+from app.accounting.reconciliation.general_ledger import check_general_ledger
 from app.accounting.reconciliation.inventory import check_inventory
 from app.accounting.reconciliation.payroll import check_payroll
 from app.accounting.reconciliation.purchases_payables import check_purchases_payables
@@ -37,4 +39,5 @@ __all__ = [
     "check_inventory",
     "check_fixed_assets",
     "check_payroll",
+    "check_general_ledger",
 ]

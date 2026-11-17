@@ -65,6 +65,19 @@ def test_async_database_url_uses_asyncpg_driver() -> None:
     assert Settings(**BASE).async_database_url == "postgresql+asyncpg://u:p@h/db"  # type: ignore[arg-type]
 
 
+def test_async_database_url_maps_schema_to_search_path() -> None:
+    settings = Settings(
+        **{
+            **BASE,
+            "database_url": "postgresql://user:pass@host/db?schema=tenant",
+        }  # type: ignore[arg-type]
+    )
+    assert settings.async_database_url == "postgresql+asyncpg://user:pass@host/db"
+    assert settings.async_database_connect_args == {
+        "server_settings": {"search_path": "tenant"}
+    }
+
+
 def test_intake_defaults_are_safe_and_validated() -> None:
     s = Settings(**BASE)  # type: ignore[arg-type]
     assert s.intake_default_date_order == "DMY"

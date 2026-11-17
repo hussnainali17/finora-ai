@@ -1,13 +1,8 @@
 import {
-  AppBar,
   Box,
-  Button,
   CircularProgress,
-  Container,
-  Toolbar,
-  Typography,
 } from '@mui/material';
-import { BrowserRouter, Link as RouterLink, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from '../features/auth/AuthContext';
 import LoginPage from '../features/auth/LoginPage';
 import ClientDetailPage from '../features/clients/ClientDetailPage';
@@ -22,50 +17,24 @@ import { AdjustmentsPage } from '../features/adjustments/AdjustmentsPage';
 import { ReportingPage } from '../features/reporting/ReportingPage';
 import { WorkflowBoardPage } from '../features/workflows/WorkflowBoardPage';
 import { AuditLogPage } from '../features/audit/AuditLogPage';
+import { WorkspaceProvider } from '../features/workspace/WorkspaceContext';
+import { AppLayout } from '../components/layout/AppLayout';
 
 function Shell() {
-  const { state, logout, can } = useAuth();
+  const { state, can } = useAuth();
 
   if (state.status === 'loading') {
     return (
-      <Box display="flex" justifyContent="center" mt={10}>
-        <CircularProgress aria-label="Restoring session" />
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress aria-label="Restoring session" sx={{ color: '#4f46e5' }} />
       </Box>
     );
   }
   if (state.status === 'anonymous') return <LoginPage />;
 
   return (
-    <Box>
-      <AppBar position="static">
-        <Toolbar sx={{ gap: 1 }}>
-          <Typography variant="h6" component="h1" sx={{ flexGrow: 1 }}>
-            CA Firm System
-          </Typography>
-          <Button color="inherit" component={RouterLink} to="/">
-            Home
-          </Button>
-          {can('client:read') && (
-            <Button color="inherit" component={RouterLink} to="/clients">
-              Clients
-            </Button>
-          )}
-          {can('llm:read') && (
-            <Button color="inherit" component={RouterLink} to="/settings/models">
-              AI models
-            </Button>
-          )}
-          {can('audit:read') && (
-            <Button color="inherit" component={RouterLink} to="/audit">
-              Audit
-            </Button>
-          )}
-          <Button color="inherit" onClick={() => void logout()}>
-            Sign out
-          </Button>
-        </Toolbar>
-      </AppBar>
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 6 }}>
+    <WorkspaceProvider>
+      <AppLayout>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/clients" element={<ClientsPage />} />
@@ -105,8 +74,8 @@ function Shell() {
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </Container>
-    </Box>
+      </AppLayout>
+    </WorkspaceProvider>
   );
 }
 

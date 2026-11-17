@@ -7,6 +7,7 @@ import {
   CardContent,
   Chip,
   CircularProgress,
+  Grid,
   Paper,
   Stack,
   Step,
@@ -14,7 +15,19 @@ import {
   Stepper,
   Typography,
 } from '@mui/material';
-import { PlayArrow, Refresh, SkipNext } from '@mui/icons-material';
+import {
+  PlayArrow,
+  Refresh,
+  SkipNext,
+  AutoAwesome,
+  CheckCircle,
+  HourglassEmpty,
+  Error as ErrorIcon,
+  FactCheck,
+  Balance,
+  Assessment,
+  ArrowForward,
+} from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   listWorkflows,
@@ -72,7 +85,7 @@ export function WorkflowBoardPage(): React.JSX.Element {
   useEffect(() => {
     const hasActive = workflows.some((w) => w.status === 'running');
     if (!hasActive) return;
-    const interval = setInterval(() => void fetchWorkflows(), 4000);
+    const interval = setInterval(() => void fetchWorkflows(), 3000);
     return () => clearInterval(interval);
   }, [workflows, fetchWorkflows]);
 
@@ -110,128 +123,343 @@ export function WorkflowBoardPage(): React.JSX.Element {
     : 0;
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+    <Box className="animate-fade-in">
+      {/* Header */}
+      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ sm: 'center' }} spacing={2} sx={{ mb: 3 }}>
         <Box>
-          <Typography variant="h5" component="h1">
-            End-to-End Accounting Workflow (LangGraph)
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Autonomous coordination of Agent 1 (Intake) → Agent 2 (Review) → Agent 3 (Adjustments) → Human Checkpoint → Agent 4 (Reporting).
+          <Stack direction="row" alignItems="center" spacing={1.5}>
+            <Box
+              sx={{
+                width: 36,
+                height: 36,
+                borderRadius: '10px',
+                background: 'linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <AutoAwesome sx={{ color: '#ffffff', fontSize: 20 }} />
+            </Box>
+            <Typography variant="h5" fontWeight="800">
+              Autonomous Accounting Pipeline
+            </Typography>
+          </Stack>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            Automated LangGraph coordination: Intake → Review → Adjustments → CA Checkpoint → Financial Statements.
           </Typography>
         </Box>
-        <Stack direction="row" spacing={1}>
+
+        <Stack direction="row" spacing={1.5}>
           <Button variant="outlined" startIcon={<Refresh />} onClick={() => void fetchWorkflows()} disabled={loading}>
             Refresh
           </Button>
           {canExecute && (
             <Button
               variant="contained"
-              startIcon={starting ? <CircularProgress size={16} /> : <PlayArrow />}
+              size="large"
+              startIcon={starting ? <CircularProgress size={16} color="inherit" /> : <PlayArrow />}
               onClick={() => void handleStart()}
               disabled={starting || loading || activeWf?.status === 'running'}
+              sx={{
+                background: 'linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%)',
+                fontWeight: 700,
+                boxShadow: '0 4px 14px rgba(79, 70, 229, 0.4)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #4338ca 0%, #0891b2 100%)',
+                },
+              }}
             >
-              Start Workflow
+              {starting ? 'Starting Workflow...' : 'Start Workflow'}
             </Button>
           )}
         </Stack>
       </Stack>
 
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 3, borderRadius: '12px' }}>{error}</Alert>}
 
-      {activeWf && (
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+      {/* Active Run Card */}
+      {activeWf ? (
+        <Paper
+          sx={{
+            p: { xs: 2.5, md: 3.5 },
+            mb: 3.5,
+            borderRadius: '18px',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 4px 20px -4px rgba(15, 23, 42, 0.06)',
+          }}
+        >
+          <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ sm: 'center' }} spacing={2} sx={{ mb: 3 }}>
             <Box>
-              <Typography variant="subtitle1" fontWeight="bold">
-                Current Run: {activeWf.id.slice(0, 8)}...
-              </Typography>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Typography variant="subtitle1" fontWeight="800">
+                  Run ID: {activeWf.id.slice(0, 8)}...
+                </Typography>
+                <Chip
+                  icon={
+                    activeWf.status === 'completed' ? (
+                      <CheckCircle sx={{ fontSize: '14px !important' }} />
+                    ) : activeWf.status === 'running' ? (
+                      <HourglassEmpty sx={{ fontSize: '14px !important' }} />
+                    ) : (
+                      <ErrorIcon sx={{ fontSize: '14px !important' }} />
+                    )
+                  }
+                  label={activeWf.status.toUpperCase()}
+                  color={
+                    activeWf.status === 'completed'
+                      ? 'success'
+                      : activeWf.status === 'paused_approval'
+                      ? 'warning'
+                      : activeWf.status === 'running'
+                      ? 'info'
+                      : 'error'
+                  }
+                  sx={{ fontWeight: 700, fontSize: '0.72rem' }}
+                />
+              </Stack>
               <Typography variant="caption" color="text.secondary">
-                Started {new Date(activeWf.created_at).toLocaleString()}
+                Started on {new Date(activeWf.created_at).toLocaleString()}
               </Typography>
             </Box>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Chip
-                label={activeWf.status.toUpperCase()}
-                color={
-                  activeWf.status === 'completed'
-                    ? 'success'
-                    : activeWf.status === 'paused_approval'
-                    ? 'warning'
-                    : activeWf.status === 'running'
-                    ? 'info'
-                    : 'error'
-                }
-              />
-              {activeWf.status === 'paused_approval' && canExecute && (
-                <Button
-                  variant="contained"
-                  color="warning"
-                  startIcon={<SkipNext />}
-                  onClick={() => void handleResume(activeWf.id)}
-                  disabled={resuming}
-                >
-                  Resume After CA Approval
-                </Button>
-              )}
-            </Stack>
+
+            {activeWf.status === 'paused_approval' && canExecute && (
+              <Button
+                variant="contained"
+                color="warning"
+                size="large"
+                startIcon={resuming ? <CircularProgress size={16} color="inherit" /> : <SkipNext />}
+                onClick={() => void handleResume(activeWf.id)}
+                disabled={resuming}
+                sx={{
+                  fontWeight: 700,
+                  boxShadow: '0 4px 14px rgba(245, 158, 11, 0.4)',
+                }}
+              >
+                {resuming ? 'Resuming...' : 'Resume After CA Approval'}
+              </Button>
+            )}
           </Stack>
 
+          {/* Checkpoint Banner */}
           {activeWf.status === 'paused_approval' && (
-            <Alert severity="warning" sx={{ mb: 3 }}>
-              <strong>Human-in-the-Loop Checkpoint:</strong> The workflow has generated proposed period-end adjustments. Please review and approve them before resuming statement generation.
-              <Button
-                size="small"
-                sx={{ ml: 2 }}
-                onClick={() => navigate(`/clients/${clientId}/periods/${periodId}/adjustments`)}
-              >
-                Go to Adjustments
-              </Button>
+            <Alert
+              severity="warning"
+              sx={{
+                mb: 3.5,
+                borderRadius: '14px',
+                border: '1px solid #fde68a',
+                bgcolor: '#fffbeb',
+                p: 2,
+              }}
+            >
+              <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ sm: 'center' }} spacing={1.5}>
+                <Box>
+                  <Typography variant="subtitle2" fontWeight="800" sx={{ color: '#92400e' }}>
+                    Human-in-the-Loop Checkpoint
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#b45309' }}>
+                    Agent 3 generated proposed adjustments. Please inspect & approve them under Period Adjustments, then click Resume.
+                  </Typography>
+                </Box>
+                <Button
+                  variant="outlined"
+                  color="warning"
+                  size="small"
+                  onClick={() => navigate(`/clients/${clientId}/periods/${periodId}/adjustments`)}
+                  sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}
+                >
+                  Review Adjustments
+                </Button>
+              </Stack>
             </Alert>
           )}
 
           {activeWf.error_message && (
-            <Alert severity="error" sx={{ mb: 3 }}>
+            <Alert severity="error" sx={{ mb: 3.5, borderRadius: '12px' }}>
               {activeWf.error_message}
             </Alert>
           )}
 
-          <Stepper activeStep={activeStepIdx} alternativeLabel>
-            {STEPS_ORDER.map((stepKey) => (
-              <Step key={stepKey}>
-                <StepLabel>{STEP_LABELS[stepKey]}</StepLabel>
-              </Step>
-            ))}
-          </Stepper>
+          {/* Stepper with Modern Glow */}
+          <Box sx={{ py: 2 }}>
+            <Stepper activeStep={activeStepIdx} alternativeLabel>
+              {STEPS_ORDER.map((stepKey, idx) => {
+                const isCurrent = idx === activeStepIdx;
+                const isPassed = idx < activeStepIdx || activeWf.status === 'completed';
+                return (
+                  <Step key={stepKey} completed={isPassed}>
+                    <StepLabel
+                      StepIconProps={{
+                        sx: {
+                          fontSize: '1.75rem',
+                          ...(isCurrent && {
+                            color: '#4f46e5',
+                            filter: 'drop-shadow(0 0 8px rgba(99, 102, 241, 0.6))',
+                          }),
+                          ...(isPassed && {
+                            color: '#10b981',
+                          }),
+                        },
+                      }}
+                    >
+                      <Typography
+                        variant="caption"
+                        fontWeight={isCurrent ? 800 : 600}
+                        sx={{
+                          color: isCurrent ? '#4f46e5' : isPassed ? '#10b981' : '#64748b',
+                          fontSize: '0.75rem',
+                        }}
+                      >
+                        {STEP_LABELS[stepKey]}
+                      </Typography>
+                    </StepLabel>
+                  </Step>
+                );
+              })}
+            </Stepper>
+          </Box>
+        </Paper>
+      ) : (
+        <Paper
+          sx={{
+            p: 4,
+            mb: 3.5,
+            borderRadius: '18px',
+            textAlign: 'center',
+            bgcolor: '#ffffff',
+            border: '1px dashed #cbd5e1',
+          }}
+        >
+          <Box
+            sx={{
+              width: 56,
+              height: 56,
+              borderRadius: '16px',
+              bgcolor: '#eef2ff',
+              color: '#4f46e5',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              mx: 'auto',
+              mb: 2,
+            }}
+          >
+            <PlayArrow sx={{ fontSize: 32 }} />
+          </Box>
+          <Typography variant="h6" fontWeight="700">
+            No Workflow Runs Initiated
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 480, mx: 'auto', mt: 0.5, mb: 3 }}>
+            Execute the complete autonomous accounting loop with 1 click. Finora AI will run all 4 agents sequentially with a CA review checkpoint.
+          </Typography>
+          {canExecute && (
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<PlayArrow />}
+              onClick={() => void handleStart()}
+              disabled={starting}
+              sx={{
+                px: 3.5,
+                py: 1.2,
+                borderRadius: '12px',
+                fontWeight: 700,
+                background: 'linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%)',
+              }}
+            >
+              Start Autonomous Workflow Now
+            </Button>
+          )}
         </Paper>
       )}
 
-      {/* Navigation shortcuts */}
-      <Grid container spacing={2}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ cursor: 'pointer', height: '100%' }} onClick={() => navigate(`/clients/${clientId}/periods/${periodId}/review`)}>
-            <CardContent>
-              <Typography variant="subtitle2" color="primary">Agent 2</Typography>
-              <Typography variant="h6">Accounting Review</Typography>
-              <Typography variant="body2" color="text.secondary">Inspect AR, AP, Bank, Payroll and Inventory findings.</Typography>
+      {/* Agent Shortcut Cards */}
+      <Typography variant="h6" fontWeight="700" sx={{ mb: 2 }}>
+        Inspect Individual Agent Modules
+      </Typography>
+
+      <Grid container spacing={2.5}>
+        <Grid item xs={12} sm={6} md={4}>
+          <Card
+            sx={{
+              cursor: 'pointer',
+              height: '100%',
+              borderRadius: '16px',
+              transition: 'all 0.2s',
+              '&:hover': { transform: 'translateY(-3px)', borderColor: '#818cf8' },
+            }}
+            onClick={() => navigate(`/clients/${clientId}/periods/${periodId}/review`)}
+          >
+            <CardContent sx={{ p: 2.5 }}>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+                <Typography variant="subtitle2" color="primary" fontWeight="700">Agent 2</Typography>
+                <FactCheck sx={{ color: '#818cf8' }} />
+              </Stack>
+              <Typography variant="h6" fontWeight="700">Accounting Review</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, minHeight: 40 }}>
+                Inspect anomalies in AR, AP, Bank reconciliations, and Payroll ledgers.
+              </Typography>
+              <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 2, color: '#4f46e5' }}>
+                <Typography variant="button" sx={{ fontSize: '0.8rem', fontWeight: 700 }}>Open Review</Typography>
+                <ArrowForward sx={{ fontSize: 14 }} />
+              </Stack>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ cursor: 'pointer', height: '100%' }} onClick={() => navigate(`/clients/${clientId}/periods/${periodId}/adjustments`)}>
-            <CardContent>
-              <Typography variant="subtitle2" color="primary">Agent 3</Typography>
-              <Typography variant="h6">Period Adjustments</Typography>
-              <Typography variant="body2" color="text.secondary">Review proposed accruals, prepayments, and depreciation.</Typography>
+
+        <Grid item xs={12} sm={6} md={4}>
+          <Card
+            sx={{
+              cursor: 'pointer',
+              height: '100%',
+              borderRadius: '16px',
+              transition: 'all 0.2s',
+              '&:hover': { transform: 'translateY(-3px)', borderColor: '#f59e0b' },
+            }}
+            onClick={() => navigate(`/clients/${clientId}/periods/${periodId}/adjustments`)}
+          >
+            <CardContent sx={{ p: 2.5 }}>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+                <Typography variant="subtitle2" sx={{ color: '#d97706', fontWeight: 700 }}>Agent 3</Typography>
+                <Balance sx={{ color: '#f59e0b' }} />
+              </Stack>
+              <Typography variant="h6" fontWeight="700">Period Adjustments</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, minHeight: 40 }}>
+                Approve or reject proposed depreciation, prepayments, and accrual entries.
+              </Typography>
+              <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 2, color: '#d97706' }}>
+                <Typography variant="button" sx={{ fontSize: '0.8rem', fontWeight: 700 }}>Open Adjustments</Typography>
+                <ArrowForward sx={{ fontSize: 14 }} />
+              </Stack>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ cursor: 'pointer', height: '100%' }} onClick={() => navigate(`/clients/${clientId}/periods/${periodId}/reports`)}>
-            <CardContent>
-              <Typography variant="subtitle2" color="primary">Agent 4</Typography>
-              <Typography variant="h6">Financial Statements</Typography>
-              <Typography variant="body2" color="text.secondary">Adjusted TB, Balance Sheet, P&L, and CA Sign-off.</Typography>
+
+        <Grid item xs={12} sm={6} md={4}>
+          <Card
+            sx={{
+              cursor: 'pointer',
+              height: '100%',
+              borderRadius: '16px',
+              transition: 'all 0.2s',
+              '&:hover': { transform: 'translateY(-3px)', borderColor: '#10b981' },
+            }}
+            onClick={() => navigate(`/clients/${clientId}/periods/${periodId}/reports`)}
+          >
+            <CardContent sx={{ p: 2.5 }}>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+                <Typography variant="subtitle2" sx={{ color: '#059669', fontWeight: 700 }}>Agent 4</Typography>
+                <Assessment sx={{ color: '#10b981' }} />
+              </Stack>
+              <Typography variant="h6" fontWeight="700">Financial Statements</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, minHeight: 40 }}>
+                View Adjusted Trial Balance, Balance Sheet, P&L statement, and record CA sign-off.
+              </Typography>
+              <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 2, color: '#059669' }}>
+                <Typography variant="button" sx={{ fontSize: '0.8rem', fontWeight: 700 }}>Open Statements</Typography>
+                <ArrowForward sx={{ fontSize: 14 }} />
+              </Stack>
             </CardContent>
           </Card>
         </Grid>

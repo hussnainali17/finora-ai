@@ -16,6 +16,7 @@ type AuthState =
 
 interface AuthContextValue {
   state: AuthState;
+  principal: CurrentUser | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   /** UI convenience only. The backend re-checks every permission on every request. */
@@ -57,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       state,
+      principal: state.status === 'authenticated' ? state.user : null,
       login,
       logout,
       can: (permission) =>

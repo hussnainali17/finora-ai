@@ -65,6 +65,7 @@ DOC_TYPES = (
 # Phase 2 upload category -> the document type the uploader is claiming.
 CATEGORY_TO_TYPE = {
     "trial_balance": "trial_balance",
+    "general_ledger": "general_ledger",
     "bank_statement": "bank_statement",
     "fixed_asset_schedule": "fixed_asset_register",
     "inventory_report": "inventory_report",

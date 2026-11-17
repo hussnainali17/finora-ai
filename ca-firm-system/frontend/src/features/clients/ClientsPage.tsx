@@ -1,5 +1,6 @@
 import {
   Alert,
+  Avatar,
   Box,
   Button,
   Chip,
@@ -8,32 +9,45 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Grid,
+  InputAdornment,
   MenuItem,
-  Paper,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TablePagination,
-  TableRow,
   TextField,
   Typography,
 } from '@mui/material';
+import {
+  Add as AddIcon,
+  Business as BusinessIcon,
+  Search as SearchIcon,
+  ArrowForward as ArrowForwardIcon,
+} from '@mui/icons-material';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Can } from '../auth/Can';
 import { createClient, listClients } from '../../services/clientsApi';
 import { ApiError } from '../../services/http';
 import type { Client, Page } from '../../types/clients';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 12;
 const CURRENCIES = ['PKR', 'USD', 'EUR', 'GBP', 'AED', 'SAR'];
 
+const CURRENCY_FLAGS: Record<string, string> = {
+  PKR: '🇵🇰', USD: '🇺🇸', EUR: '🇪🇺', GBP: '🇬🇧', AED: '🇦🇪', SAR: '🇸🇦',
+};
+
+const CLIENT_COLORS = [
+  '#4f46e5', '#059669', '#0891b2', '#7c3aed', '#dc2626', '#d97706',
+];
+
+function getClientColor(id: string): string {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  return CLIENT_COLORS[Math.abs(hash) % CLIENT_COLORS.length];
+}
+
 function NewClientDialog({
-  open,
-  onClose,
-  onCreated,
+  open, onClose, onCreated,
 }: {
   open: boolean;
   onClose: () => void;
@@ -63,52 +77,146 @@ function NewClientDialog({
   }
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      fullWidth
-      maxWidth="xs"
-      component="form"
-      onSubmit={submit}
-    >
-      <DialogTitle>New client</DialogTitle>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" component="form" onSubmit={submit}>
+      <DialogTitle sx={{ pb: 1 }}>
+        <Stack direction="row" alignItems="center" gap={1.5}>
+          <Avatar sx={{ bgcolor: '#4f46e5', width: 36, height: 36 }}>
+            <BusinessIcon sx={{ fontSize: 18 }} />
+          </Avatar>
+          <Box>
+            <Typography variant="h6" sx={{ lineHeight: 1.2 }}>Add New Client</Typography>
+            <Typography variant="caption" color="text.secondary">Set up a new client profile</Typography>
+          </Box>
+        </Stack>
+      </DialogTitle>
       <DialogContent>
-        <Stack spacing={2} sx={{ mt: 1 }}>
-          {error && <Alert severity="error">{error}</Alert>}
+        <Stack spacing={2.5} sx={{ mt: 1 }}>
+          {error && <Alert severity="error" sx={{ borderRadius: 2 }}>{error}</Alert>}
           <TextField
-            label="Client code"
+            label="Client Code"
             value={code}
             onChange={(e) => setCode(e.target.value)}
             required
-            helperText="Letters, digits, . _ - (unique in your firm)"
+            helperText="Unique short code (letters, digits, . _ -)"
+            variant="outlined"
           />
           <TextField
-            label="Client name"
+            label="Company / Client Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
+            variant="outlined"
           />
           <TextField
             select
-            label="Base currency"
+            label="Base Currency"
             value={currency}
             onChange={(e) => setCurrency(e.target.value)}
+            variant="outlined"
           >
             {CURRENCIES.map((c) => (
               <MenuItem key={c} value={c}>
-                {c}
+                {CURRENCY_FLAGS[c] ?? ''} {c}
               </MenuItem>
             ))}
           </TextField>
         </Stack>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button type="submit" variant="contained" disabled={busy || !code || !name}>
-          Create client
+      <DialogActions sx={{ px: 3, pb: 3 }}>
+        <Button onClick={onClose} sx={{ color: '#64748b' }}>Cancel</Button>
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={busy || !code || !name}
+          startIcon={busy ? <CircularProgress size={16} /> : <AddIcon />}
+          sx={{
+            background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+            px: 3,
+            '&:hover': { background: 'linear-gradient(135deg, #3730a3 0%, #6d28d9 100%)' },
+          }}
+        >
+          {busy ? 'Creating…' : 'Create Client'}
         </Button>
       </DialogActions>
     </Dialog>
+  );
+}
+
+function ClientCard({ client }: { client: Client }) {
+  const navigate = useNavigate();
+  const color = getClientColor(client.id);
+  const initials = client.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+
+  return (
+    <Box
+      onClick={() => navigate(`/clients/${client.id}`)}
+      sx={{
+        bgcolor: '#fff',
+        border: '1px solid #e2e8f0',
+        borderRadius: 3,
+        p: 2.5,
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        position: 'relative',
+        overflow: 'hidden',
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          boxShadow: '0 12px 32px rgba(79,70,229,0.12)',
+          borderColor: color,
+        },
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0, left: 0, right: 0,
+          height: 4,
+          background: `linear-gradient(90deg, ${color}, ${color}99)`,
+          borderRadius: '12px 12px 0 0',
+        },
+      }}
+    >
+      <Stack spacing={2}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Avatar sx={{ bgcolor: `${color}18`, color, width: 48, height: 48, fontWeight: 700, fontSize: '1.1rem' }}>
+            {initials || <BusinessIcon />}
+          </Avatar>
+          <Chip
+            size="small"
+            label={client.status === 'active' ? 'Active' : client.status}
+            sx={{
+              bgcolor: client.status === 'active' ? '#dcfce7' : '#f1f5f9',
+              color: client.status === 'active' ? '#15803d' : '#475569',
+              fontWeight: 600,
+              fontSize: '0.72rem',
+            }}
+          />
+        </Stack>
+
+        <Box>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#0f172a', lineHeight: 1.3 }}>
+            {client.name}
+          </Typography>
+          <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 500 }}>
+            {client.code}
+          </Typography>
+        </Box>
+
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Chip
+            size="small"
+            label={`${CURRENCY_FLAGS[client.base_currency] ?? ''} ${client.base_currency}`}
+            sx={{ bgcolor: '#f8fafc', color: '#475569', fontWeight: 600, fontSize: '0.75rem' }}
+          />
+          <Box
+            sx={{
+              display: 'flex', alignItems: 'center', gap: 0.5,
+              color: color, fontSize: '0.8rem', fontWeight: 600,
+            }}
+          >
+            View details <ArrowForwardIcon sx={{ fontSize: 14 }} />
+          </Box>
+        </Stack>
+      </Stack>
+    </Box>
   );
 }
 
@@ -129,85 +237,141 @@ export default function ClientsPage() {
 
   useEffect(load, [load]);
   useEffect(() => {
-    const t = setTimeout(() => {
-      setPage(0);
-      setQ(search.trim());
-    }, 300);
+    const t = setTimeout(() => { setPage(0); setQ(search.trim()); }, 300);
     return () => clearTimeout(t);
   }, [search]);
 
+  const totalPages = data ? Math.ceil(data.total / PAGE_SIZE) : 0;
+
   return (
-    <Paper sx={{ p: 3 }}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2} gap={2}>
-        <Typography variant="h5" component="h2">
-          Clients
-        </Typography>
+    <Stack spacing={3}>
+      {/* Header */}
+      <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" gap={2}>
+        <Box>
+          <Typography variant="h5" sx={{ fontWeight: 800, color: '#0f172a' }}>
+            Clients
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {data ? `${data.total} client${data.total !== 1 ? 's' : ''} in your firm` : 'Manage your client portfolio'}
+          </Typography>
+        </Box>
         <Can permission="client:create">
-          <Button variant="contained" onClick={() => setCreating(true)}>
-            New client
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setCreating(true)}
+            sx={{
+              background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+              px: 3, py: 1.2, borderRadius: 2.5, fontWeight: 600,
+              boxShadow: '0 4px 14px rgba(79,70,229,0.3)',
+              '&:hover': {
+                background: 'linear-gradient(135deg, #3730a3 0%, #6d28d9 100%)',
+                transform: 'translateY(-1px)',
+                boxShadow: '0 6px 20px rgba(79,70,229,0.4)',
+              },
+              transition: 'all 0.2s ease',
+            }}
+          >
+            New Client
           </Button>
         </Can>
       </Stack>
+
+      {/* Search */}
       <TextField
         size="small"
-        label="Search clients"
+        placeholder="Search clients by name or code…"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        sx={{ mb: 2, minWidth: 260 }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon sx={{ color: '#94a3b8', fontSize: 20 }} />
+            </InputAdornment>
+          ),
+        }}
+        sx={{
+          maxWidth: 400,
+          '& .MuiOutlinedInput-root': { borderRadius: 2.5, bgcolor: '#fff' },
+        }}
       />
 
-      {error && <Alert severity="error">{error}</Alert>}
-      {!data && !error && <CircularProgress aria-label="Loading clients" />}
+      {/* States */}
+      {error && <Alert severity="error" sx={{ borderRadius: 2 }}>{error}</Alert>}
+      {!data && !error && (
+        <Stack alignItems="center" py={8}>
+          <CircularProgress sx={{ color: '#4f46e5' }} />
+          <Typography variant="body2" color="text.secondary" mt={2}>Loading clients…</Typography>
+        </Stack>
+      )}
+
       {data && data.items.length === 0 && (
-        <Alert severity="info">
-          {q
-            ? 'No clients match your search.'
-            : 'No clients yet. Clients you are assigned to appear here.'}
-        </Alert>
+        <Stack alignItems="center" py={8} spacing={2}>
+          <Avatar sx={{ bgcolor: '#f1f5f9', width: 72, height: 72 }}>
+            <BusinessIcon sx={{ fontSize: 36, color: '#94a3b8' }} />
+          </Avatar>
+          <Box textAlign="center">
+            <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a' }}>
+              {q ? 'No clients found' : 'No clients yet'}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {q ? `No results for "${q}". Try a different search.` : 'Add your first client to get started.'}
+            </Typography>
+          </Box>
+          {!q && (
+            <Can permission="client:create">
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => setCreating(true)}
+                sx={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)' }}
+              >
+                Add First Client
+              </Button>
+            </Can>
+          )}
+        </Stack>
       )}
+
+      {/* Card Grid */}
       {data && data.items.length > 0 && (
-        <Box sx={{ overflowX: 'auto' }}>
-          <Table size="small" aria-label="Clients">
-            <TableHead>
-              <TableRow>
-                <TableCell>Code</TableCell>
-                <TableCell>Name</TableCell>
-                <TableCell>Currency</TableCell>
-                <TableCell>Status</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {data.items.map((c) => (
-                <TableRow key={c.id} hover>
-                  <TableCell>{c.code}</TableCell>
-                  <TableCell>
-                    <Button component={RouterLink} to={`/clients/${c.id}`} size="small">
-                      {c.name}
-                    </Button>
-                  </TableCell>
-                  <TableCell>{c.base_currency}</TableCell>
-                  <TableCell>
-                    <Chip
-                      size="small"
-                      label={c.status}
-                      color={c.status === 'active' ? 'success' : 'default'}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <TablePagination
-            component="div"
-            count={data.total}
-            page={page}
-            onPageChange={(_, p) => setPage(p)}
-            rowsPerPage={PAGE_SIZE}
-            rowsPerPageOptions={[PAGE_SIZE]}
-          />
-        </Box>
+        <>
+          <Grid container spacing={2.5}>
+            {data.items.map((c) => (
+              <Grid key={c.id} item xs={12} sm={6} md={4} lg={3}>
+                <ClientCard client={c} />
+              </Grid>
+            ))}
+          </Grid>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <Stack direction="row" justifyContent="center" alignItems="center" gap={1} pt={1}>
+              <Button
+                size="small"
+                disabled={page === 0}
+                onClick={() => setPage((p) => p - 1)}
+                sx={{ borderRadius: 2 }}
+              >
+                Previous
+              </Button>
+              <Typography variant="body2" sx={{ color: '#64748b', px: 2 }}>
+                Page {page + 1} of {totalPages}
+              </Typography>
+              <Button
+                size="small"
+                disabled={page >= totalPages - 1}
+                onClick={() => setPage((p) => p + 1)}
+                sx={{ borderRadius: 2 }}
+              >
+                Next
+              </Button>
+            </Stack>
+          )}
+        </>
       )}
+
       <NewClientDialog open={creating} onClose={() => setCreating(false)} onCreated={load} />
-    </Paper>
+    </Stack>
   );
 }

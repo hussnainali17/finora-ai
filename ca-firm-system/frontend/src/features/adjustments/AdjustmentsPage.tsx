@@ -3,20 +3,13 @@ import {
   Alert,
   Box,
   Button,
-  Card,
-  CardContent,
   Chip,
   CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  FormControl,
-  Grid,
-  InputLabel,
-  MenuItem,
   Paper,
-  Select,
   Stack,
   Table,
   TableBody,
@@ -26,7 +19,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { AutoFixHigh, CheckCircle, Close, Refresh } from '@mui/icons-material';
+import { AutoFixHigh, Refresh } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
 import {
   decideAdjustment,

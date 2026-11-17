@@ -6,8 +6,8 @@ const json = (method: string, body: unknown): RequestInit => ({
   body: JSON.stringify(body),
 });
 
-export const listClients = (p: { limit: number; offset: number; q?: string; status?: string }) => {
-  const qs = new URLSearchParams({ limit: String(p.limit), offset: String(p.offset) });
+export const listClients = (p: { limit?: number; offset?: number; q?: string; status?: string } = {}) => {
+  const qs = new URLSearchParams({ limit: String(p.limit ?? 20), offset: String(p.offset ?? 0) });
   if (p.q) qs.set('q', p.q);
   if (p.status) qs.set('status', p.status);
   return apiFetch<Page<Client>>(`/clients?${qs}`);

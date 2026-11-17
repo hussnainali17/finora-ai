@@ -6,13 +6,34 @@ credential defaults: a missing secret fails fast at startup.
 """
 
 from functools import lru_cache
-from typing import Literal
+import json
+from typing import Any, Literal, Union
 
-from pydantic import Field, SecretStr, model_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy.engine import make_url
 
 PLACEHOLDER_MARKER = "CHANGE_ME"
 MIN_JWT_SECRET_LENGTH = 32
+
+
+def _async_database_url_and_connect_args(
+    database_url: str,
+) -> tuple[str, dict[str, dict[str, str]]]:
+    url = make_url(database_url)
+    drivername = (
+        "postgresql+asyncpg"
+        if url.drivername in ("postgresql", "postgres")
+        else url.drivername
+    )
+    query = dict(url.query)
+    schema = query.pop("schema", None)
+    if isinstance(schema, tuple):
+        raise ValueError("DATABASE_URL must contain at most one schema parameter")
+
+    async_url = url.set(drivername=drivername, query=query).render_as_string(hide_password=False)
+    connect_args = {"server_settings": {"search_path": schema}} if schema is not None else {}
+    return async_url, connect_args
 
 
 class Settings(BaseSettings):
@@ -22,7 +43,26 @@ class Settings(BaseSettings):
     app_env: Literal["local", "test", "staging", "production"] = "local"
     log_level: str = "INFO"
     api_prefix: str = "/api/v1"
-    cors_allowed_origins: list[str] = Field(default_factory=lambda: ["http://localhost:8080"])
+    cors_allowed_origins: Union[list[str], str] = Field(
+        default_factory=lambda: ["http://localhost:8080"]
+    )
+
+    @field_validator("cors_allowed_origins", mode="after")
+    @classmethod
+    def _parse_cors_origins(cls, v: Any) -> list[str]:
+        if isinstance(v, str):
+            v_clean = v.strip()
+            if v_clean.startswith("[") and v_clean.endswith("]"):
+                try:
+                    parsed = json.loads(v_clean)
+                    if isinstance(parsed, list):
+                        return [str(x).strip() for x in parsed if str(x).strip()]
+                except Exception:
+                    pass
+            return [x.strip() for x in v_clean.split(",") if x.strip()]
+        if isinstance(v, list):
+            return [str(x).strip() for x in v if str(x).strip()]
+        return []
 
     # Dependencies (required; no credential defaults)
     database_url: SecretStr
@@ -32,8 +72,14 @@ class Settings(BaseSettings):
     minio_access_key: SecretStr
     minio_secret_key: SecretStr
     minio_bucket: str = "ca-firm-files"
-    litellm_base_url: str
-    litellm_api_key: SecretStr  # server-side only; never sent to the browser
+    litellm_base_url: str = ""
+    litellm_api_key: SecretStr = SecretStr("")  # Deprecated proxy key; local LiteLLM SDK does not require it
+
+    # Provider keys for local LiteLLM SDK (supports comma-separated multiple keys for failover & rotation)
+    openai_api_key: SecretStr = SecretStr("")
+    anthropic_api_key: SecretStr = SecretStr("")
+    gemini_api_key: SecretStr = SecretStr("")
+    groq_api_key: SecretStr = SecretStr("")
 
     health_check_timeout_seconds: float = 3.0
 
@@ -86,6 +132,49 @@ class Settings(BaseSettings):
     llm_retry_backoff_seconds: float = Field(default=0.5, ge=0, le=10)  # doubles each retry
     llm_availability_timeout_seconds: float = Field(default=3.0, gt=0, le=30)
 
+    def get_provider_api_keys(self, provider: str) -> list[str]:
+        """Returns API keys for a provider (supports single or comma-separated multiple keys)."""
+        import os
+
+        name = provider.lower().replace("-", "_")
+        raw = ""
+        if name in ("openai", "gpt"):
+            raw = (
+                self.openai_api_key.get_secret_value()
+                or os.getenv("OPENAI_API_KEYS", "")
+                or os.getenv("OPENAI_API_KEY", "")
+            )
+        elif name in ("anthropic", "claude"):
+            raw = (
+                self.anthropic_api_key.get_secret_value()
+                or os.getenv("ANTHROPIC_API_KEYS", "")
+                or os.getenv("ANTHROPIC_API_KEY", "")
+            )
+        elif name in ("gemini", "google"):
+            raw = (
+                self.gemini_api_key.get_secret_value()
+                or os.getenv("GEMINI_API_KEYS", "")
+                or os.getenv("GEMINI_API_KEY", "")
+                or os.getenv("GOOGLE_API_KEY", "")
+            )
+        elif name in ("groq",):
+            raw = (
+                self.groq_api_key.get_secret_value()
+                or os.getenv("GROQ_API_KEYS", "")
+                or os.getenv("GROQ_API_KEY", "")
+            )
+        else:
+            raw = os.getenv(f"{provider.upper()}_API_KEYS", "") or os.getenv(
+                f"{provider.upper()}_API_KEY", ""
+            )
+
+        keys: list[str] = []
+        for k in raw.split(","):
+            cleaned = k.strip()
+            if cleaned and cleaned != PLACEHOLDER_MARKER and cleaned not in keys:
+                keys.append(cleaned)
+        return keys
+
     @property
     def upload_extensions(self) -> frozenset[str]:
         return frozenset(
@@ -97,11 +186,11 @@ class Settings(BaseSettings):
     @property
     def async_database_url(self) -> str:
         """SQLAlchemy async URL derived from DATABASE_URL (asyncpg driver)."""
-        url = self.database_url.get_secret_value()
-        for prefix in ("postgresql://", "postgres://"):
-            if url.startswith(prefix):
-                return "postgresql+asyncpg://" + url[len(prefix) :]
-        return url
+        return _async_database_url_and_connect_args(self.database_url.get_secret_value())[0]
+
+    @property
+    def async_database_connect_args(self) -> dict[str, dict[str, str]]:
+        return _async_database_url_and_connect_args(self.database_url.get_secret_value())[1]
 
     @model_validator(mode="after")
     def _validate_secrets_and_cookie_policy(self) -> "Settings":
@@ -113,7 +202,6 @@ class Settings(BaseSettings):
                 "REDIS_URL": self.redis_url,
                 "MINIO_ACCESS_KEY": self.minio_access_key,
                 "MINIO_SECRET_KEY": self.minio_secret_key,
-                "LITELLM_API_KEY": self.litellm_api_key,
                 "JWT_SECRET": self.jwt_secret,
             }
             bad = [k for k, v in secrets.items() if PLACEHOLDER_MARKER in v.get_secret_value()]

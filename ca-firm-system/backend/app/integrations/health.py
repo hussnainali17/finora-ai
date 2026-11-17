@@ -12,6 +12,7 @@ from dataclasses import dataclass
 import asyncpg
 import httpx
 import redis.asyncio as aioredis
+from sqlalchemy.engine import make_url
 
 from app.core.config import Settings
 
@@ -25,8 +26,15 @@ class DependencyStatus:
 
 
 async def check_postgres(settings: Settings) -> None:
+    url = make_url(settings.database_url.get_secret_value())
+    query = dict(url.query)
+    schema = query.pop("schema", None)
+    clean_url = url.set(drivername="postgresql", query=query).render_as_string(hide_password=False)
+    server_settings = {"search_path": schema} if schema else None
     conn = await asyncpg.connect(
-        settings.database_url.get_secret_value(), timeout=settings.health_check_timeout_seconds
+        clean_url,
+        server_settings=server_settings,
+        timeout=settings.health_check_timeout_seconds,
     )
     try:
         await conn.fetchval("SELECT 1")

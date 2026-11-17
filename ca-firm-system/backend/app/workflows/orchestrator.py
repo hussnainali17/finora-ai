@@ -19,6 +19,7 @@ from typing import Any, Literal, TypedDict
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm.attributes import flag_modified
 
 from app.agents.accounting_review_agent.agent import AccountingReviewAgent
 from app.agents.adjustments_agent.agent import AdjustmentsAgent
@@ -95,6 +96,7 @@ class WorkflowOrchestrator:
 
         # Execute first phase
         await self._step_next(session, run)
+        await session.refresh(run)
         return run
 
     async def _step_next(self, session: AsyncSession, run: WorkflowRun) -> None:
@@ -216,6 +218,7 @@ class WorkflowOrchestrator:
                 run.status = "completed"
                 state["status"] = "completed"
                 state["step"] = "completed"
+                flag_modified(run, "state_data")
                 await session.commit()
                 await self._emit_status(run)
                 logger.info("orchestrator completed successfully", extra={"run_id": str(run.id)})
@@ -226,6 +229,7 @@ class WorkflowOrchestrator:
             run.error_message = str(exc)
             state["status"] = "failed"
             state["error"] = str(exc)
+            flag_modified(run, "state_data")
             await session.commit()
             await self._emit_status(run)
 
@@ -247,9 +251,11 @@ class WorkflowOrchestrator:
         run.state_data["ca_approval_granted"] = True
         run.state_data["status"] = "running"
         run.state_data["step"] = "financial_reporting"
+        flag_modified(run, "state_data")
         await session.commit()
 
         await self._step_next(session, run)
+        await session.refresh(run)
         return run
 
     async def _emit_status(self, run: WorkflowRun) -> None:

@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 DocumentCategory = Literal[
     "trial_balance",
+    "general_ledger",
     "bank_statement",
     "invoice",
     "receipt",

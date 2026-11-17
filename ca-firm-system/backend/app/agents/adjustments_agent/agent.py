@@ -27,7 +27,7 @@ from app.accounting.adjustments import (
     calculate_prepayment_amortization,
 )
 from app.accounting.depreciation import calculate_asset_depreciation
-from app.models import ExtractedRow, ExtractedTable
+from app.models import ExtractedColumn, ExtractedRow, ExtractedTable
 from app.models.accounting_review import ReconciliationSchedule, ReviewFinding
 from app.models.adjustments import PeriodAdjustment
 
@@ -77,14 +77,27 @@ class AdjustmentsAgent:
         # Load normalized rows
         fixed_asset_rows: list[dict[str, Any]] = []
         prepayment_rows: list[dict[str, Any]] = []
+        gl_rows: list[dict[str, Any]] = []  # GL transactions for accrual detection
 
         for table in tables:
+            cols_res = await session.execute(
+                select(ExtractedColumn).where(ExtractedColumn.table_id == table.id)
+            )
+            cols = list(cols_res.scalars().all())
+            col_map = {str(c.col_index): (c.confirmed_role or c.suggested_role) for c in cols}
+
             rows_res = await session.execute(
                 select(ExtractedRow).where(ExtractedRow.table_id == table.id)
             )
             for r in rows_res.scalars().all():
+                norm_dict = dict(r.normalized or {})
+                for col_idx_str, val in (r.normalized or {}).items():
+                    role = col_map.get(col_idx_str)
+                    if role and role not in norm_dict:
+                        norm_dict[role] = val
+
                 row_dict = {
-                    **r.normalized,
+                    **norm_dict,
                     "_row_index": r.row_index,
                     "_table_id": str(table.id),
                     "_document_id": str(table.document_id),
@@ -96,6 +109,8 @@ class AdjustmentsAgent:
                     fixed_asset_rows.append(row_dict)
                 elif any(k in tbl_type or k in tbl_name for k in ("prepay", "prepaid", "insurance", "contract")):
                     prepayment_rows.append(row_dict)
+                elif tbl_type == "general_ledger" or "general_ledger" in tbl_name or "gl" == tbl_name:
+                    gl_rows.append(row_dict)
 
         candidates: list[ProposedAdjustmentCandidate] = []
 
@@ -141,13 +156,13 @@ class AdjustmentsAgent:
             prov_proposals = calculate_bad_debt_provision(ar_sched.data)
             candidates.extend(prov_proposals)
 
-        # D. Accruals from unresolved review findings (e.g. unrecorded interest/bills)
+        # D. Accruals from unresolved review findings (e.g. unrecorded interest/bills, GL/TB discrepancies)
         findings_res = await session.execute(
             select(ReviewFinding).where(
                 ReviewFinding.firm_id == firm_id,
                 ReviewFinding.client_id == client_id,
                 ReviewFinding.period_id == period_id,
-                ReviewFinding.finding_type.in_(["unrecorded_expense", "accrued_liability"]),
+                ReviewFinding.finding_type.in_(["unrecorded_expense", "accrued_liability", "gl_tb_discrepancy"]),
             )
         )
         for f in findings_res.scalars().all():
@@ -166,6 +181,35 @@ class AdjustmentsAgent:
                         source_refs=[f.source_ref] if f.source_ref else [],
                     )
                 )
+
+        # E. Accrual candidates directly identified from General Ledger entries
+        for gl_r in gl_rows:
+            desc = str(gl_r.get("description") or gl_r.get("account_name") or "").lower()
+            if any(k in desc for k in ("accru", "unbilled", "provisional", "audit fee", "utility bill")):
+                amt_str = str(gl_r.get("debit") or gl_r.get("amount") or 0)
+                try:
+                    amt = Decimal(amt_str)
+                except Exception:
+                    amt = Decimal(0)
+                if amt > 0:
+                    candidates.append(
+                        ProposedAdjustmentCandidate(
+                            category="accruals",
+                            debit_account_code=str(gl_r.get("account_code") or "6050"),
+                            debit_account_name=str(gl_r.get("account_name") or "Accrued Operating Expense"),
+                            credit_account_code="2120",
+                            credit_account_name="Accrued Liabilities",
+                            amount=amt,
+                            currency="PKR",
+                            accounting_rationale=f"GL-based accrual candidate: {desc}",
+                            calculation_details={"origin": "general_ledger", "row_index": gl_r.get("_row_index")},
+                            source_refs=[{
+                                "document_id": gl_r.get("_document_id"),
+                                "table_id": gl_r.get("_table_id"),
+                                "row_index": gl_r.get("_row_index"),
+                            }],
+                        )
+                    )
 
         created_adjustments: list[PeriodAdjustment] = []
         for c in candidates:

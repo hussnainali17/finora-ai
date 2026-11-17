@@ -23,6 +23,7 @@ from app.db.base import Base, created_at_col, updated_at_col, uuid_pk
 
 DOCUMENT_CATEGORIES = (
     "trial_balance",
+    "general_ledger",
     "bank_statement",
     "invoice",
     "receipt",

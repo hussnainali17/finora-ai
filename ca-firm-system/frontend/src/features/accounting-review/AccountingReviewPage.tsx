@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import { PlayArrow, Refresh } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
-import { triggerReview, listReviewRuns, getReviewRun } from '../../services/accountingReviewApi';
+import { triggerReview, listReviewRuns } from '../../services/accountingReviewApi';
 import type { ReviewRun, ModuleSummary } from '../../types/accounting_review';
 import { MODULE_LABELS } from '../../types/accounting_review';
 import { useAuth } from '../auth/AuthContext';

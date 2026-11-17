@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from app.api.deps import PrincipalDep, requires
+from app.api.deps import Principal, requires
 from app.integrations.kafka import (
     ACCOUNTING_REVIEW_REQUESTED,
     ADJUSTMENT_CALCULATION_REQUESTED,
@@ -92,7 +92,7 @@ CONSUMER_GROUPS = [
     summary="Get Kafka topics and consumer groups configuration",
 )
 async def get_kafka_topics(
-    principal: PrincipalDep = Depends(requires("user:manage")),
+    principal: Principal = Depends(requires("user:manage")),
 ) -> KafkaConfigOut:
     return KafkaConfigOut(
         topics=TOPIC_CATALOG,

@@ -14,7 +14,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, Query
 
-from app.api.deps import PrincipalDep, SessionDep, requires
+from app.api.deps import Principal, SessionDep, requires
 from app.schemas.accounting_review import (
     FindingStatusUpdate,
     ReconciliationScheduleOut,
@@ -43,7 +43,7 @@ async def trigger_review(
     period_id: uuid.UUID,
     body: TriggerReviewIn,
     session: SessionDep,
-    principal: PrincipalDep = Depends(requires("review:manage")),
+    principal: Principal = Depends(requires("review:manage")),
 ) -> ReviewRunOut:
     run = await review_svc.create_review_run(
         session,
@@ -64,7 +64,7 @@ async def list_review_runs(
     client_id: uuid.UUID,
     period_id: uuid.UUID,
     session: SessionDep,
-    principal: PrincipalDep = Depends(requires("review:read")),
+    principal: Principal = Depends(requires("review:read")),
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
 ) -> ReviewRunListOut:
@@ -92,7 +92,7 @@ async def get_review_run(
     period_id: uuid.UUID,
     review_run_id: uuid.UUID,
     session: SessionDep,
-    principal: PrincipalDep = Depends(requires("review:read")),
+    principal: Principal = Depends(requires("review:read")),
 ) -> ReviewRunOut:
     run = await review_svc.get_review_run(session, principal, review_run_id)
     return ReviewRunOut.model_validate(run)
@@ -108,7 +108,7 @@ async def list_findings(
     period_id: uuid.UUID,
     review_run_id: uuid.UUID,
     session: SessionDep,
-    principal: PrincipalDep = Depends(requires("review:read")),
+    principal: Principal = Depends(requires("review:read")),
     module: str | None = Query(default=None),
     severity: str | None = Query(default=None),
     status: str | None = Query(default=None),
@@ -143,7 +143,7 @@ async def update_finding(
     finding_id: uuid.UUID,
     body: FindingStatusUpdate,
     session: SessionDep,
-    principal: PrincipalDep = Depends(requires("review:resolve")),
+    principal: Principal = Depends(requires("review:resolve")),
 ) -> ReviewFindingOut:
     finding = await review_svc.update_finding_status(
         session,
@@ -165,7 +165,7 @@ async def list_schedules(
     period_id: uuid.UUID,
     review_run_id: uuid.UUID,
     session: SessionDep,
-    principal: PrincipalDep = Depends(requires("review:read")),
+    principal: Principal = Depends(requires("review:read")),
 ) -> list[ReconciliationScheduleOut]:
     schedules = await review_svc.list_schedules(session, principal, review_run_id)
     return [ReconciliationScheduleOut.model_validate(s) for s in schedules]
@@ -182,7 +182,7 @@ async def get_schedule(
     review_run_id: uuid.UUID,
     schedule_id: uuid.UUID,
     session: SessionDep,
-    principal: PrincipalDep = Depends(requires("review:read")),
+    principal: Principal = Depends(requires("review:read")),
 ) -> ReconciliationScheduleOut:
     schedule = await review_svc.get_schedule(
         session, principal, review_run_id, schedule_id

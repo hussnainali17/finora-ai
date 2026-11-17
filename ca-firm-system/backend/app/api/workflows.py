@@ -15,7 +15,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from sqlalchemy import select
 
-from app.api.deps import PrincipalDep, SessionDep, requires
+from app.api.deps import Principal, SessionDep, requires
 from app.models.workflows import WorkflowRun
 from app.services.authz import get_accessible_client
 from app.workflows.orchestrator import WorkflowOrchestrator
@@ -52,7 +52,7 @@ async def start_workflow(
     client_id: uuid.UUID,
     period_id: uuid.UUID,
     session: SessionDep,
-    principal: PrincipalDep = Depends(requires("workflow:execute")),
+    principal: Principal = Depends(requires("workflow:execute")),
 ) -> WorkflowRunOut:
     await get_accessible_client(session, principal, client_id)
     orch = WorkflowOrchestrator()
@@ -63,6 +63,7 @@ async def start_workflow(
         period_id=period_id,
         user_id=principal.user_id,
     )
+    await session.refresh(run)
     return WorkflowRunOut.model_validate(run)
 
 
@@ -75,7 +76,7 @@ async def list_workflows(
     client_id: uuid.UUID,
     period_id: uuid.UUID,
     session: SessionDep,
-    principal: PrincipalDep = Depends(requires("workflow:read")),
+    principal: Principal = Depends(requires("workflow:read")),
 ) -> list[WorkflowRunOut]:
     await get_accessible_client(session, principal, client_id)
     runs = await session.scalars(
@@ -100,7 +101,7 @@ async def get_workflow(
     period_id: uuid.UUID,
     workflow_id: uuid.UUID,
     session: SessionDep,
-    principal: PrincipalDep = Depends(requires("workflow:read")),
+    principal: Principal = Depends(requires("workflow:read")),
 ) -> WorkflowRunOut:
     await get_accessible_client(session, principal, client_id)
     run = await session.scalar(
@@ -125,9 +126,10 @@ async def resume_workflow(
     period_id: uuid.UUID,
     workflow_id: uuid.UUID,
     session: SessionDep,
-    principal: PrincipalDep = Depends(requires("workflow:execute")),
+    principal: Principal = Depends(requires("workflow:execute")),
 ) -> WorkflowRunOut:
     await get_accessible_client(session, principal, client_id)
     orch = WorkflowOrchestrator()
     run = await orch.resume_after_ca_approval(session, workflow_id)
+    await session.refresh(run)
     return WorkflowRunOut.model_validate(run)

@@ -98,4 +98,30 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   return resp.status === 204 ? (undefined as T) : ((await resp.json()) as T);
 }
 
+/** HTTP helper object providing standard REST verb methods. */
+export const http = {
+  get: <T>(path: string, init?: RequestInit): Promise<T> =>
+    apiFetch<T>(path, { ...init, method: 'GET' }),
+  post: <T>(path: string, body?: unknown, init?: RequestInit): Promise<T> =>
+    apiFetch<T>(path, {
+      ...init,
+      method: 'POST',
+      body: body !== undefined ? (typeof body === 'string' ? body : JSON.stringify(body)) : undefined,
+    }),
+  put: <T>(path: string, body?: unknown, init?: RequestInit): Promise<T> =>
+    apiFetch<T>(path, {
+      ...init,
+      method: 'PUT',
+      body: body !== undefined ? (typeof body === 'string' ? body : JSON.stringify(body)) : undefined,
+    }),
+  patch: <T>(path: string, body?: unknown, init?: RequestInit): Promise<T> =>
+    apiFetch<T>(path, {
+      ...init,
+      method: 'PATCH',
+      body: body !== undefined ? (typeof body === 'string' ? body : JSON.stringify(body)) : undefined,
+    }),
+  delete: <T>(path: string, init?: RequestInit): Promise<T> =>
+    apiFetch<T>(path, { ...init, method: 'DELETE' }),
+};
+
 export { errorFrom };
