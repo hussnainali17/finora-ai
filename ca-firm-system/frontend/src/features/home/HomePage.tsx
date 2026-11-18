@@ -17,7 +17,6 @@ import {
 } from '@mui/material';
 import {
   AccountBalance as AccountBalanceIcon,
-  AutoAwesome as AutoAwesomeIcon,
   CloudUpload as CloudUploadIcon,
   FactCheck as FactCheckIcon,
   Balance as BalanceIcon,
@@ -102,19 +101,16 @@ export default function HomePage(): React.JSX.Element {
         <Stack spacing={2} sx={{ position: 'relative', zIndex: 1, maxWidth: '850px' }}>
           <Stack direction="row" alignItems="center" spacing={1.5}>
             <Box
+              component="img"
+              src="/finora-icon-dark.png"
+              alt="Finora"
               sx={{
-                width: 38,
-                height: 38,
-                borderRadius: '10px',
-                background: 'linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 0 15px rgba(99, 102, 241, 0.5)',
+                width: 36,
+                height: 36,
+                objectFit: 'contain',
+                filter: 'drop-shadow(0 0 8px rgba(99, 102, 241, 0.6))',
               }}
-            >
-              <AutoAwesomeIcon sx={{ color: '#ffffff', fontSize: 22 }} />
-            </Box>
+            />
             <Typography variant="overline" sx={{ letterSpacing: '0.12em', color: '#a5b4fc', fontWeight: 700 }}>
               FINORA AI • AUTONOMOUS CA INTELLIGENCE
             </Typography>
@@ -133,19 +129,21 @@ export default function HomePage(): React.JSX.Element {
               <Button
                 variant="contained"
                 size="large"
-                startIcon={<PlayArrowIcon />}
+                startIcon={<PlayArrowIcon sx={{ color: '#ffffff !important' }} />}
                 onClick={() => navigate(getWorkspacePath('workflows'))}
                 sx={{
-                  bgcolor: '#ffffff',
-                  color: '#4f46e5',
+                  background: 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%) !important',
+                  color: '#ffffff !important',
                   fontWeight: 700,
                   borderRadius: '12px',
                   px: 3,
                   py: 1.2,
+                  boxShadow: '0 4px 14px rgba(0, 0, 0, 0.15)',
                   '&:hover': {
-                    bgcolor: '#f1f5f9',
+                    background: 'linear-gradient(135deg, #4338ca 0%, #4f46e5 100%) !important',
+                    color: '#ffffff !important',
                     transform: 'translateY(-2px)',
-                    boxShadow: '0 8px 20px rgba(0,0,0,0.2)',
+                    boxShadow: '0 8px 20px rgba(0,0,0,0.25)',
                   },
                 }}
               >
@@ -155,17 +153,20 @@ export default function HomePage(): React.JSX.Element {
             <Button
               variant="outlined"
               size="large"
-              startIcon={<FolderOpenIcon />}
+              startIcon={<FolderOpenIcon sx={{ color: '#ffffff !important' }} />}
               component={RouterLink}
               to="/clients"
               sx={{
-                color: '#ffffff',
-                borderColor: 'rgba(255, 255, 255, 0.3)',
+                color: '#ffffff !important',
+                borderColor: 'rgba(255, 255, 255, 0.4) !important',
+                bgcolor: 'rgba(255, 255, 255, 0.08) !important',
+                fontWeight: 600,
                 borderRadius: '12px',
                 px: 2.5,
                 '&:hover': {
-                  borderColor: '#ffffff',
-                  bgcolor: 'rgba(255, 255, 255, 0.08)',
+                  borderColor: '#ffffff !important',
+                  bgcolor: 'rgba(255, 255, 255, 0.18) !important',
+                  color: '#ffffff !important',
                 },
               }}
             >

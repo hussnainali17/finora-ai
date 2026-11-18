@@ -115,20 +115,20 @@ def check_general_ledger(
     # 7. GL summary schedule (account-level net balances with source traceability)
     gl_summary_rows = []
     for acct_key, data in sorted(account_totals.items()):
-        net = data["total_debit"] - data["total_credit"]
+        net = data.total_debit - data.total_credit
         gl_summary_rows.append({
-            "account_code": data["account_code"],
-            "account_name": data["account_name"],
-            "total_debit": str(data["total_debit"]),
-            "total_credit": str(data["total_credit"]),
+            "account_code": data.account_code,
+            "account_name": data.account_name,
+            "total_debit": str(data.total_debit),
+            "total_credit": str(data.total_credit),
             "net_balance": str(net),
-            "tx_count": data["tx_count"],
-            "source_document_ids": list(data["source_document_ids"]),
-            "source_table_ids": list(data["source_table_ids"]),
+            "tx_count": data.tx_count,
+            "source_document_ids": list(data.source_document_ids),
+            "source_table_ids": list(data.source_table_ids),
         })
 
-    total_gl_dr = sum(d["total_debit"] for d in account_totals.values())
-    total_gl_cr = sum(d["total_credit"] for d in account_totals.values())
+    total_gl_dr = sum(d.total_debit for d in account_totals.values())
+    total_gl_cr = sum(d.total_credit for d in account_totals.values())
     is_balanced = abs(total_gl_dr - total_gl_cr) <= TOLERANCE
 
     if not is_balanced:

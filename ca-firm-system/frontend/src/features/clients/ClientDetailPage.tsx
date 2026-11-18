@@ -5,6 +5,10 @@ import {
   Button,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Grid,
   Paper,
   Stack,
@@ -19,18 +23,22 @@ import {
   LockOpen as LockOpenIcon,
   ArrowForward as ArrowForwardIcon,
   Folder as FolderIcon,
+  DeleteOutline as DeleteOutlineIcon,
+  Warning as WarningIcon,
 } from '@mui/icons-material';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Can } from '../auth/Can';
-import { createPeriod, getClient, listPeriods, setPeriodState } from '../../services/clientsApi';
+import { createPeriod, deletePeriod, getClient, listPeriods, setPeriodState } from '../../services/clientsApi';
 import { ApiError } from '../../services/http';
 import type { Client, Period } from '../../types/clients';
 import { formatDate } from './format';
+import { useWorkspace } from '../workspace/WorkspaceContext';
 
 export default function ClientDetailPage() {
   const { clientId = '' } = useParams();
   const navigate = useNavigate();
+  const { refreshWorkspace, activePeriod } = useWorkspace();
   const [client, setClient] = useState<Client | null>(null);
   const [periods, setPeriods] = useState<Period[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -39,6 +47,8 @@ export default function ClientDetailPage() {
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
   const [addingPeriod, setAddingPeriod] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Period | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(() => {
     Promise.all([getClient(clientId), listPeriods(clientId)])
@@ -76,6 +86,25 @@ export default function ClientDetailPage() {
       load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed');
+    }
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    const targetId = deleteTarget.id;
+    setDeleting(true);
+    try {
+      await deletePeriod(clientId, targetId);
+      setDeleteTarget(null);
+      load();
+      if (activePeriod?.id === targetId) {
+        void refreshWorkspace();
+      }
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to delete period');
+      setDeleteTarget(null);
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -266,24 +295,47 @@ export default function ClientDetailPage() {
                         <FolderIcon sx={{ fontSize: 14 }} /> Open period
                         <ArrowForwardIcon sx={{ fontSize: 14 }} />
                       </Box>
-                      <Can permission="period:close">
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          onClick={(e) => { e.stopPropagation(); void toggle(p); }}
-                          sx={{
-                            borderRadius: 1.5, fontSize: '0.72rem', py: 0.3, px: 1.2,
-                            borderColor: p.status === 'open' ? '#fca5a5' : '#86efac',
-                            color: p.status === 'open' ? '#dc2626' : '#15803d',
-                            '&:hover': {
-                              bgcolor: p.status === 'open' ? '#fef2f2' : '#f0fdf4',
-                              borderColor: p.status === 'open' ? '#dc2626' : '#059669',
-                            },
-                          }}
-                        >
-                          {p.status === 'open' ? 'Close' : 'Reopen'}
-                        </Button>
-                      </Can>
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        <Can permission="period:close">
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={(e) => { e.stopPropagation(); void toggle(p); }}
+                            sx={{
+                              borderRadius: 1.5, fontSize: '0.72rem', py: 0.3, px: 1.2,
+                              borderColor: p.status === 'open' ? '#fca5a5' : '#86efac',
+                              color: p.status === 'open' ? '#dc2626' : '#15803d',
+                              '&:hover': {
+                                bgcolor: p.status === 'open' ? '#fef2f2' : '#f0fdf4',
+                                borderColor: p.status === 'open' ? '#dc2626' : '#059669',
+                              },
+                            }}
+                          >
+                            {p.status === 'open' ? 'Close' : 'Reopen'}
+                          </Button>
+                        </Can>
+                        <Can permission="period:close">
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={(e) => { e.stopPropagation(); setDeleteTarget(p); }}
+                            title="Delete period"
+                            aria-label="Delete period"
+                            sx={{
+                              borderRadius: 1.5, fontSize: '0.72rem', py: 0.3, px: 1,
+                              minWidth: '32px',
+                              borderColor: '#fca5a5',
+                              color: '#dc2626',
+                              '&:hover': {
+                                bgcolor: '#fef2f2',
+                                borderColor: '#dc2626',
+                              },
+                            }}
+                          >
+                            <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                          </Button>
+                        </Can>
+                      </Stack>
                     </Stack>
                   </Stack>
                 </Box>
@@ -367,6 +419,67 @@ export default function ClientDetailPage() {
           </Box>
         </Paper>
       </Can>
+
+      {/* Delete Period Confirmation Dialog */}
+      <Dialog
+        open={!!deleteTarget}
+        onClose={() => !deleting && setDeleteTarget(null)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Stack direction="row" alignItems="center" gap={1.5}>
+            <Avatar sx={{ bgcolor: '#fef2f2', width: 40, height: 40 }}>
+              <WarningIcon sx={{ fontSize: 22, color: '#dc2626' }} />
+            </Avatar>
+            <Box>
+              <Typography variant="h6" sx={{ lineHeight: 1.2, fontWeight: 700 }}>
+                Delete Period
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                This action cannot be undone
+              </Typography>
+            </Box>
+          </Stack>
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ color: '#475569', mt: 1 }}>
+            Are you sure you want to permanently delete the period{' '}
+            <strong>{deleteTarget?.label}</strong>
+            {deleteTarget && (
+              <>
+                {' '}({formatDate(deleteTarget.start_date)} → {formatDate(deleteTarget.end_date)})
+              </>
+            )}
+            ? All associated data for this period will be removed.
+          </Typography>
+          <Alert severity="warning" sx={{ mt: 2, borderRadius: 2 }}>
+            This will permanently delete the accounting period and any related workflow data.
+          </Alert>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button
+            onClick={() => setDeleteTarget(null)}
+            disabled={deleting}
+            sx={{ color: '#64748b' }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={confirmDelete}
+            disabled={deleting}
+            startIcon={deleting ? <CircularProgress size={16} /> : <DeleteOutlineIcon />}
+            sx={{
+              bgcolor: '#dc2626',
+              px: 3,
+              '&:hover': { bgcolor: '#b91c1c' },
+            }}
+          >
+            {deleting ? 'Deleting…' : 'Delete Period'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Stack>
   );
 }

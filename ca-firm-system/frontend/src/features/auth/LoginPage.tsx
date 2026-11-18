@@ -12,7 +12,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { AutoAwesome, Bolt, LockOpen } from '@mui/icons-material';
+import { Bolt, LockOpen } from '@mui/icons-material';
 import { ApiError } from '../../services/http';
 import { useAuth } from './AuthContext';
 
@@ -104,27 +104,16 @@ export default function LoginPage() {
             {/* Finora AI Brand Logo */}
             <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="center" sx={{ mb: 2 }}>
               <Box
+                component="img"
+                src="/finora-logo-dark.png"
+                alt="Finora"
                 sx={{
-                  width: 48,
                   height: 48,
-                  borderRadius: '14px',
-                  background: 'linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 0 25px rgba(99, 102, 241, 0.6)',
+                  width: 'auto',
+                  maxWidth: 220,
+                  objectFit: 'contain',
                 }}
-              >
-                <AutoAwesome sx={{ color: '#ffffff', fontSize: 28 }} />
-              </Box>
-              <Box>
-                <Typography variant="h5" fontWeight="800" sx={{ color: '#ffffff', letterSpacing: '-0.02em' }}>
-                  Finora <span style={{ color: '#818cf8' }}>AI</span>
-                </Typography>
-                <Typography variant="caption" sx={{ color: '#94a3b8', fontSize: '0.72rem', letterSpacing: '0.04em', fontWeight: 600 }}>
-                  AUTONOMOUS ACCOUNTING
-                </Typography>
-              </Box>
+              />
             </Stack>
 
             <Typography variant="body2" textAlign="center" sx={{ color: '#cbd5e1', mb: 3 }}>

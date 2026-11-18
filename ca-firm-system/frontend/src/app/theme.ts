@@ -92,16 +92,18 @@ export const theme = createTheme({
         },
         containedPrimary: {
           background: 'linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)',
-          color: '#ffffff',
+          color: '#ffffff !important',
           '&:hover': {
             background: 'linear-gradient(135deg, #4338ca 0%, #4f46e5 100%)',
+            color: '#ffffff !important',
           },
         },
         containedSecondary: {
           background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
-          color: '#ffffff',
+          color: '#ffffff !important',
           '&:hover': {
             background: 'linear-gradient(135deg, #047857 0%, #059669 100%)',
+            color: '#ffffff !important',
             boxShadow: '0 4px 12px rgba(16, 185, 129, 0.25)',
           },
         },

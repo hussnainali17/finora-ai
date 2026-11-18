@@ -1,3 +1,37 @@
 # Keep the supplied phase archives as local source inputs, not repository files.
 /*.zip
 DATA/
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python virtual environments and caches
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# JavaScript dependencies and build output
+node_modules/
+dist/
+build/
+.next/
+coverage/
+*.tsbuildinfo
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+
+# Keep this evaluation suite and sample ledger available for the repository.

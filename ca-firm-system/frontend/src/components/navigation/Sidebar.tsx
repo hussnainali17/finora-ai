@@ -8,7 +8,6 @@ import {
   ListItemIcon,
   ListItemText,
   Typography,
-  Chip,
   Divider,
   Avatar,
   IconButton,
@@ -18,7 +17,6 @@ import {
   Tooltip,
 } from '@mui/material';
 import {
-  AutoAwesome,
   Dashboard as DashboardIcon,
   Business as BusinessIcon,
   CloudUpload as CloudUploadIcon,
@@ -94,45 +92,21 @@ export const Sidebar: React.FC = () => {
         {/* Brand Header */}
         <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3, cursor: 'pointer' }} onClick={() => navigate('/')}>
           <Box
+            component="img"
+            src="/finora-logo-dark.png"
+            alt="Finora Logo"
             sx={{
-              width: 42,
-              height: 42,
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 0 20px rgba(99, 102, 241, 0.5)',
-              transition: 'transform 0.3s ease',
+              height: 38,
+              width: 'auto',
+              maxWidth: 190,
+              objectFit: 'contain',
+              display: 'block',
+              transition: 'transform 0.25s ease',
               '&:hover': {
-                transform: 'scale(1.05) rotate(3deg)',
+                transform: 'scale(1.03)',
               },
             }}
-          >
-            <AutoAwesome sx={{ color: '#ffffff', fontSize: 24 }} />
-          </Box>
-          <Box>
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <Typography variant="h6" fontWeight="800" sx={{ letterSpacing: '-0.02em', color: '#ffffff', fontSize: '1.25rem' }}>
-                Finora <span style={{ color: '#818cf8' }}>AI</span>
-              </Typography>
-              <Chip
-                label="v2.0"
-                size="small"
-                sx={{
-                  height: 18,
-                  fontSize: '0.65rem',
-                  fontWeight: 700,
-                  bgcolor: 'rgba(99, 102, 241, 0.2)',
-                  color: '#a5b4fc',
-                  border: '1px solid rgba(99, 102, 241, 0.4)',
-                }}
-              />
-            </Stack>
-            <Typography variant="caption" sx={{ color: '#94a3b8', fontSize: '0.72rem', display: 'block', mt: -0.2 }}>
-              Autonomous CA Intelligence
-            </Typography>
-          </Box>
+          />
         </Stack>
 
         {/* Active Client & Period Context Card */}

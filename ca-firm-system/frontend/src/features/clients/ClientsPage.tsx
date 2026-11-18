@@ -154,7 +154,13 @@ function ClientCard({ client }: { client: Client }) {
         bgcolor: '#fff',
         border: '1px solid #e2e8f0',
         borderRadius: 3,
+        borderTop: `4px solid ${color}`,
         p: 2.5,
+        minHeight: 230,
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
         cursor: 'pointer',
         transition: 'all 0.2s ease',
         position: 'relative',
@@ -164,21 +170,26 @@ function ClientCard({ client }: { client: Client }) {
           boxShadow: '0 12px 32px rgba(79,70,229,0.12)',
           borderColor: color,
         },
-        '&::before': {
-          content: '""',
-          position: 'absolute',
-          top: 0, left: 0, right: 0,
-          height: 4,
-          background: `linear-gradient(90deg, ${color}, ${color}99)`,
-          borderRadius: '12px 12px 0 0',
-        },
       }}
     >
-      <Stack spacing={2}>
+      <Stack spacing={2} sx={{ flex: 1 }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Avatar sx={{ bgcolor: `${color}18`, color, width: 48, height: 48, fontWeight: 700, fontSize: '1.1rem' }}>
-            {initials || <BusinessIcon />}
-          </Avatar>
+          <Box
+            sx={{
+              width: 42,
+              height: 42,
+              borderRadius: '10px',
+              bgcolor: `${color}18`,
+              color,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: 700,
+              fontSize: '1rem',
+            }}
+          >
+            {initials || <BusinessIcon fontSize="small" />}
+          </Box>
           <Chip
             size="small"
             label={client.status === 'active' ? 'Active' : client.status}
@@ -200,20 +211,22 @@ function ClientCard({ client }: { client: Client }) {
           </Typography>
         </Box>
 
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
+        <Typography variant="body2" color="text.secondary" sx={{ minHeight: 38, mt: 0.5 }}>
+          {client.legal_name || `Base currency: ${CURRENCY_FLAGS[client.base_currency] ?? ''} ${client.base_currency} • FY ends month ${client.fiscal_year_end_month}`}
+        </Typography>
+
+        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 'auto', pt: 1.5 }}>
           <Chip
             size="small"
             label={`${CURRENCY_FLAGS[client.base_currency] ?? ''} ${client.base_currency}`}
             sx={{ bgcolor: '#f8fafc', color: '#475569', fontWeight: 600, fontSize: '0.75rem' }}
           />
-          <Box
-            sx={{
-              display: 'flex', alignItems: 'center', gap: 0.5,
-              color: color, fontSize: '0.8rem', fontWeight: 600,
-            }}
-          >
-            View details <ArrowForwardIcon sx={{ fontSize: 14 }} />
-          </Box>
+          <Stack direction="row" alignItems="center" spacing={0.5} sx={{ color, fontSize: '0.8rem', fontWeight: 700 }}>
+            <Typography variant="button" sx={{ fontSize: '0.8rem', fontWeight: 700, color, textTransform: 'none' }}>
+              View details
+            </Typography>
+            <ArrowForwardIcon sx={{ fontSize: 16 }} />
+          </Stack>
         </Stack>
       </Stack>
     </Box>

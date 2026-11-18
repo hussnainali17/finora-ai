@@ -23,3 +23,5 @@ export const createPeriod = (clientId: string, body: PeriodCreate) =>
   apiFetch<Period>(`/clients/${clientId}/periods`, json('POST', body));
 export const setPeriodState = (clientId: string, periodId: string, action: 'close' | 'reopen') =>
   apiFetch<Period>(`/clients/${clientId}/periods/${periodId}/${action}`, { method: 'POST' });
+export const deletePeriod = (clientId: string, periodId: string) =>
+  apiFetch<void>(`/clients/${clientId}/periods/${periodId}`, { method: 'DELETE' });

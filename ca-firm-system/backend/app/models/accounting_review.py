@@ -38,6 +38,8 @@ REVIEW_MODULES = (
     "inventory",
     "fixed_assets",
     "payroll",
+    "general_ledger",
+    "trial_balance",
 )
 TRIGGER_TYPES = ("auto", "manual")
 

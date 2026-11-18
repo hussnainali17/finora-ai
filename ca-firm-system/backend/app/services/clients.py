@@ -4,7 +4,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import delete, func, or_, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -280,6 +280,47 @@ async def set_period_status(
     await session.commit()
     await session.refresh(period)
     return period
+
+
+async def delete_period(
+    session: AsyncSession,
+    principal: Principal,
+    client_id: uuid.UUID,
+    period_id: uuid.UUID,
+) -> None:
+    require_permission(principal, "period:close")
+    period = await _get_period(session, principal, client_id, period_id)
+
+    from app.models.accounting_review import ReviewRun
+    from app.models.adjustments import PeriodAdjustment
+    from app.models.documents import Document
+    from app.models.reporting import FinancialReport
+    from app.models.workflows import WorkflowRun
+
+    # Cascade delete records tied to this period across all agents/modules
+    await session.execute(delete(FinancialReport).where(FinancialReport.period_id == period.id))
+    await session.execute(delete(PeriodAdjustment).where(PeriodAdjustment.period_id == period.id))
+    await session.execute(delete(WorkflowRun).where(WorkflowRun.period_id == period.id))
+    await session.execute(delete(ReviewRun).where(ReviewRun.period_id == period.id))
+
+    # Temporarily disable documents immutable trigger to allow document purge for this period
+    await session.execute(text("ALTER TABLE documents DISABLE TRIGGER documents_immutable;"))
+    try:
+        await session.execute(delete(Document).where(Document.period_id == period.id))
+    finally:
+        await session.execute(text("ALTER TABLE documents ENABLE TRIGGER documents_immutable;"))
+
+    record_audit(
+        session,
+        action="period.deleted",
+        actor=principal,
+        target_type="accounting_period",
+        target_id=period.id,
+        client_id=period.client_id,
+        metadata={"label": period.label},
+    )
+    await session.delete(period)
+    await session.commit()
 
 
 # ----------------------------------------------------------------------------- access

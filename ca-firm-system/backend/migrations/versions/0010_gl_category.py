@@ -32,6 +32,7 @@ def _in(values: tuple[str, ...]) -> str:
 
 
 def upgrade() -> None:
+    op.execute("ALTER TABLE documents DROP CONSTRAINT IF EXISTS ck_documents_ck_documents_category_valid;")
     op.execute("ALTER TABLE documents DROP CONSTRAINT IF EXISTS ck_documents_category_valid;")
     op.execute("ALTER TABLE documents DROP CONSTRAINT IF EXISTS category_valid;")
     op.execute(

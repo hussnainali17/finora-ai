@@ -127,6 +127,14 @@ async def reopen_period(
     )
 
 
+@router.delete("/{client_id}/periods/{period_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_period(
+    client_id: uuid.UUID, period_id: uuid.UUID, principal: PrincipalDep, session: SessionDep
+) -> Response:
+    await svc.delete_period(session, principal, client_id, period_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 # ------------------------------------------------------------------------------- access
 
 
