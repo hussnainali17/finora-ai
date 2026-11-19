@@ -12,9 +12,9 @@ import pytest
 # ---------------------------------------------------------------------------
 # Path setup — make sure the backend is importable
 # ---------------------------------------------------------------------------
-EVAL_ROOT = Path(__file__).resolve().parent.parent  # Finora/evaluation
-REPO_ROOT = EVAL_ROOT.parent                        # Finora/
-BACKEND_ROOT = REPO_ROOT / "ca-firm-system" / "backend"
+EVAL_ROOT = Path(__file__).resolve().parent.parent  # ca-firm-system/backend/evaluation
+BACKEND_ROOT = EVAL_ROOT.parent                     # ca-firm-system/backend
+REPO_ROOT = BACKEND_ROOT.parent.parent              # Finora/
 DATASETS_ROOT = EVAL_ROOT / "datasets"
 
 # Insert backend into sys.path so we can import app.*

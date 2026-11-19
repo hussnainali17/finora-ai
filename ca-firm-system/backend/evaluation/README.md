@@ -39,21 +39,15 @@ evaluation/
 ### 1. Install dependencies
 
 ```bash
-cd d:/hussnain/Final-Year-Project/7th-sem-final/Finora/evaluation
-pip install -r requirements.txt
+cd ca-firm-system/backend
+venv\Scripts\activate   # Windows
+pip install -r evaluation/requirements.txt
 ```
-
-> **Tip:** Use the backend's venv so you can import `app.*` directly:
-> ```bash
-> cd ../ca-firm-system/backend
-> venv\Scripts\activate   # Windows
-> pip install deepeval pytest
-> ```
 
 ### 2. Run dataset structure tests (no backend needed)
 
 ```bash
-cd d:/hussnain/Final-Year-Project/7th-sem-final/Finora/evaluation
+cd ca-firm-system/backend/evaluation
 python -m pytest tests/test_datasets.py -v
 ```
 
