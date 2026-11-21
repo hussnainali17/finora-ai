@@ -1,0 +1,158 @@
+{
+  "model_evaluator": "gpt-6-luna",
+  "gateway_url": "http://127.0.0.1:4000",
+  "timestamp": "2026-11-21 17:42:18",
+  "token_usage": {
+    "total_calls": 12,
+    "successful_calls": 12,
+    "failed_calls": 0,
+    "prompt_tokens": 3888,
+    "completion_tokens": 4098,
+    "total_tokens": 7986,
+    "cost_usd": "0.000510751"
+  },
+  "datasets_evaluated": 9,
+  "results": [
+    {
+      "category": "Bank & Cash",
+      "dataset": "usat_bank_statement_clean.json",
+      "type": "clean",
+      "total_rows": 24,
+      "findings_detected": 0,
+      "expected_findings": 0,
+      "accuracy_pct": 100.0,
+      "llm_eval": {
+        "relevance": 0.9,
+        "faithfulness": 1.0,
+        "actionability": 0.3,
+        "overall_score": 0.82,
+        "feedback": "Accurately summarizes the clean reconciliation and matched totals without unsupported claims. It could briefly note that no corrective action is required, while recommending retention of reconciliation support and appropriate review/approval documentation."
+      }
+    },
+    {
+      "category": "General Ledger",
+      "dataset": "usat_gl_clean.json",
+      "type": "clean",
+      "total_rows": 20,
+      "findings_detected": 0,
+      "expected_findings": 0,
+      "accuracy_pct": 100.0,
+      "llm_eval": {
+        "overall_score": 1.0,
+        "relevance": 1.0,
+        "faithfulness": 1.0,
+        "actionability": 1.0
+      }
+    },
+    {
+      "category": "General Ledger",
+      "dataset": "usat_gl_with_errors.json",
+      "type": "with_errors",
+      "total_rows": 17,
+      "findings_detected": 6,
+      "expected_findings": ">=5",
+      "accuracy_pct": 100.0,
+      "llm_eval": {
+        "relevance": 0.95,
+        "faithfulness": 0.98,
+        "actionability": 0.84,
+        "overall_score": 0.92,
+        "feedback": "Directly addresses the missing date and its impact on identification, period assignment, and verification without inventing facts. Remediation is appropriate, though it could be stronger by specifying validation against supporting source documents and preserving an audit trail."
+      }
+    },
+    {
+      "category": "Fixed Assets",
+      "dataset": "usat_far_clean.json",
+      "type": "clean",
+      "total_rows": 8,
+      "findings_detected": 0,
+      "expected_findings": 0,
+      "accuracy_pct": 100.0,
+      "llm_eval": {
+        "overall_score": 1.0,
+        "relevance": 1.0,
+        "faithfulness": 1.0,
+        "actionability": 1.0
+      }
+    },
+    {
+      "category": "Fixed Assets",
+      "dataset": "usat_far_with_errors.json",
+      "type": "with_errors",
+      "total_rows": 6,
+      "findings_detected": 5,
+      "expected_findings": ">=4",
+      "accuracy_pct": 100.0,
+      "llm_eval": {
+        "relevance": 0.95,
+        "faithfulness": 0.93,
+        "actionability": 0.92,
+        "overall_score": 0.93,
+        "feedback": "Strong and directly relevant explanation. It accurately identifies over-depreciation or posting errors, explains IAS 16 implications, and provides appropriate investigation and IAS 8 remediation steps. Minor limitation: the underlying cause is unverified, and the explanation could distinguish more explicitly between correcting depreciation, impairment, disposal, and opening-balance errors."
+      }
+    },
+    {
+      "category": "Trial Balance",
+      "dataset": "usat_trial_balance_clean.json",
+      "type": "clean",
+      "total_rows": 10,
+      "findings_detected": 0,
+      "expected_findings": 0,
+      "accuracy_pct": 100.0,
+      "llm_eval": {
+        "overall_score": 1.0,
+        "relevance": 1.0,
+        "faithfulness": 1.0,
+        "actionability": 1.0
+      }
+    },
+    {
+      "category": "Trial Balance",
+      "dataset": "usat_trial_balance_with_errors.json",
+      "type": "with_errors",
+      "total_rows": 5,
+      "findings_detected": 2,
+      "expected_findings": 2,
+      "accuracy_pct": 100.0,
+      "llm_eval": {
+        "relevance": 0.9,
+        "faithfulness": 0.45,
+        "actionability": 0.72,
+        "overall_score": 0.67,
+        "feedback": "Clearly explains the imbalance and its impact on financial reporting, with sensible remediation steps. However, the stated debit and credit totals and the claim that one row lacks an account code are not supported by the finding provided, reducing factual faithfulness. Actions are appropriate but remain general and do not specifically reference IAS/IFRS requirements or detailed reconciliation procedures."
+      }
+    },
+    {
+      "category": "Sales & Receivables",
+      "dataset": "usat_ar_ageing.json",
+      "type": "with_errors",
+      "total_rows": 6,
+      "findings_detected": 7,
+      "expected_findings": ">=2",
+      "accuracy_pct": 100.0,
+      "llm_eval": {
+        "relevance": 0.98,
+        "faithfulness": 0.94,
+        "actionability": 0.97,
+        "overall_score": 0.96,
+        "feedback": "Strong, relevant assessment that correctly highlights both ECL and fundamental existence/validity risks, with practical IFRS-aligned procedures. Minor technical imprecision: the 90-day presumption indicates default but does not automatically establish credit impairment, and Stage 3 terminology is not applicable to receivables accounted for under the simplified approach."
+      }
+    },
+    {
+      "category": "Purchases & Payables",
+      "dataset": "usat_ap_dataset.json",
+      "type": "with_errors",
+      "total_rows": 5,
+      "findings_detected": 5,
+      "expected_findings": ">=3",
+      "accuracy_pct": 100.0,
+      "llm_eval": {
+        "relevance": 0.98,
+        "faithfulness": 0.96,
+        "actionability": 0.97,
+        "overall_score": 0.97,
+        "feedback": "Directly addresses the missing supplier reference, explains relevant AP risks, avoids inventing amounts, and provides comprehensive, practical remediation. Some statements assume the row is an invoice/AP transaction, but this is a reasonable contextual inference rather than a material hallucination."
+      }
+    }
+  ]
+}
