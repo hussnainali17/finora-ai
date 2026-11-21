@@ -29,6 +29,7 @@ import {
   Logout as LogoutIcon,
   SwapHoriz as SwapHorizIcon,
   CheckCircle as CheckCircleIcon,
+  AutoAwesome as AutoAwesomeIcon,
 } from '@mui/icons-material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../features/auth/AuthContext';
@@ -412,6 +413,41 @@ export const Sidebar: React.FC = () => {
                   secondary="Full LangGraph Coordination"
                   primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: 700 }}
                   secondaryTypographyProps={{ fontSize: '0.68rem', color: '#93c5fd' }}
+                />
+              </ListItemButton>
+            </ListItem>
+          )}
+
+          {/* CA Review & AI Interaction */}
+          {(can('ca_review:read') || can('workflow:read') || can('review:read')) && (
+            <ListItem disablePadding sx={{ mb: 0.5 }}>
+              <ListItemButton
+                onClick={() => handleNav(getWorkspacePath('ca-review'))}
+                selected={location.pathname.includes('/ca-review')}
+                sx={{
+                  borderRadius: '10px',
+                  py: 1,
+                  px: 1.5,
+                  color: '#ffffff',
+                  background: location.pathname.includes('/ca-review')
+                    ? 'linear-gradient(135deg, rgba(79, 70, 229, 0.45) 0%, rgba(14, 165, 233, 0.4) 100%)'
+                    : 'linear-gradient(135deg, rgba(79, 70, 229, 0.16) 0%, rgba(14, 165, 233, 0.12) 100%)',
+                  border: location.pathname.includes('/ca-review')
+                    ? '1px solid rgba(129, 140, 248, 0.6)'
+                    : '1px solid rgba(129, 140, 248, 0.3)',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.3) 0%, rgba(14, 165, 233, 0.25) 100%)',
+                  },
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 34, color: '#a5b4fc' }}>
+                  <AutoAwesomeIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText
+                  primary="CA Review & AI Chat"
+                  secondary="Ask, Correct & Re-execute"
+                  primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: 700 }}
+                  secondaryTypographyProps={{ fontSize: '0.68rem', color: '#c7d2fe' }}
                 />
               </ListItemButton>
             </ListItem>

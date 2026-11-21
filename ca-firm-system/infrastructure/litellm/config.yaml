@@ -28,6 +28,12 @@ model_list:
     litellm_params:
       model: gemini/gemini-2.5-flash
       api_key: os.environ/GEMINI_API_KEY
+  - model_name: gpt-6-luna
+    litellm_params:
+      model: openai/gpt-6-luna:free          # CentAI free-tier model (OpenAI-compatible endpoint)
+      api_base: https://api.cent-ai.dev/v1
+      api_key: os.environ/CENT_AI_KEY
+      drop_params: true
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
@@ -35,4 +41,4 @@ general_settings:
 litellm_settings:
   request_timeout: 60 # hard ceiling; the backend applies a tighter per-call timeout
   num_retries: 0
-  drop_params: false
+  drop_params: true

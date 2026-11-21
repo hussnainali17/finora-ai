@@ -15,6 +15,7 @@ AGENTS: Final[dict[str, str]] = {
     "accounting_review": "Agent 2 - Accounting Review & Reconciliation",
     "adjustments": "Agent 3 - Period-End Adjustments",
     "reporting": "Agent 4 - Financial Reporting & Validation",
+    "ca_review": "CA Review Assistant - Multi-Agent Interaction & Correction",
 }
 
 CAP_STRUCTURED = "structured_output"  # reliably returns the JSON object it is asked for
@@ -60,6 +61,11 @@ MODELS: Final[dict[str, ModelSpec]] = {
             "Fast, inexpensive model with a very long context window.",
             1_000_000, frozenset({CAP_STRUCTURED, CAP_TOOLS}), "economy",
         ),
+        ModelSpec(
+            "gpt-6-luna", "GPT-6 Luna (Free)", "CentAI",
+            "Free-tier model via CentAI gateway — used for CA Review chat, intent classification and all agent tasks.",
+            128_000, frozenset({CAP_STRUCTURED, CAP_TOOLS}), "economy",
+        ),
     )
 }  # fmt: skip
 
@@ -86,16 +92,37 @@ TASKS: Final[dict[str, TaskSpec]] = {
             "Suggest column roles / document type for ambiguous spreadsheet columns.",
             frozenset({CAP_STRUCTURED}), 8_000, 1024,
         ),
+        TaskSpec(
+            "ca_review", "chat",
+            "Conversational Q&A grounded in project source data, reconciliations and reports.",
+            frozenset({CAP_STRUCTURED}), 32_000, 2048,
+        ),
+        TaskSpec(
+            "ca_review", "classify_intent",
+            "Classify CA review intent (question, error_report, correction_request, instruction).",
+            frozenset({CAP_STRUCTURED}), 8_000, 512,
+        ),
+        TaskSpec(
+            "ca_review", "proposal",
+            "Generate structured correction proposals with diffs and downstream re-execution plans.",
+            frozenset({CAP_STRUCTURED}), 16_000, 1024,
+        ),
+        TaskSpec(
+            "ca_review", "instruction",
+            "Interpret and route CA directives across accounting, audit, and adjustments agents.",
+            frozenset({CAP_STRUCTURED}), 16_000, 1024,
+        ),
     )
 }  # fmt: skip
 # Later phases register their tasks here (Agent 2-4); the settings screen and API pick them up.
 
 # Used only to pre-fill choices; a firm still has to ENABLE a model before anything is sent to it.
 SUGGESTED_DEFAULTS: Final[dict[str, str]] = {
-    "intake": "fast-general",
-    "accounting_review": "strong-general",
-    "adjustments": "strong-general",
-    "reporting": "strong-general",
+    "intake": "gpt-6-luna",
+    "accounting_review": "gpt-6-luna",
+    "adjustments": "gpt-6-luna",
+    "reporting": "gpt-6-luna",
+    "ca_review": "gpt-6-luna",
 }
 
 

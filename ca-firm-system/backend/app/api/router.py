@@ -5,6 +5,7 @@ from app.api import (
     adjustments,
     audit,
     auth,
+    ca_review,
     clients,
     documents,
     extraction,
@@ -29,4 +30,5 @@ api_router.include_router(accounting_review.router)
 api_router.include_router(adjustments.router)
 api_router.include_router(reporting.router)
 api_router.include_router(workflows.router)
+api_router.include_router(ca_review.router)
 api_router.include_router(kafka_topics.router)

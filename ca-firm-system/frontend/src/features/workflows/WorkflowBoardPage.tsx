@@ -150,7 +150,21 @@ export function WorkflowBoardPage(): React.JSX.Element {
           </Typography>
         </Box>
 
-        <Stack direction="row" spacing={1.5}>
+        <Stack direction="row" spacing={1.5} alignItems="center">
+          <Button
+            variant="contained"
+            color="secondary"
+            startIcon={<AutoAwesome />}
+            onClick={() => navigate(`/clients/${clientId}/periods/${periodId}/ca-review`)}
+            sx={{
+              background: 'linear-gradient(135deg, #6366f1 0%, #0ea5e9 100%)',
+              fontWeight: 700,
+              textTransform: 'none',
+              borderRadius: '8px',
+            }}
+          >
+            CA Review & AI Chat
+          </Button>
           <Button variant="outlined" startIcon={<Refresh />} onClick={() => void fetchWorkflows()} disabled={loading}>
             Refresh
           </Button>

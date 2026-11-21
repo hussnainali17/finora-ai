@@ -14,6 +14,7 @@ import ModelSettingsPage from '../features/model-settings/ModelSettingsPage';
 import { AccountingReviewPage } from '../features/accounting-review/AccountingReviewPage';
 import { FindingsPage } from '../features/accounting-review/FindingsPage';
 import { AdjustmentsPage } from '../features/adjustments/AdjustmentsPage';
+import { CAReviewPage } from '../features/ca-review/CAReviewPage';
 import { ReportingPage } from '../features/reporting/ReportingPage';
 import { WorkflowBoardPage } from '../features/workflows/WorkflowBoardPage';
 import { AuditLogPage } from '../features/audit/AuditLogPage';
@@ -59,6 +60,16 @@ function Shell() {
           <Route
             path="/clients/:clientId/periods/:periodId/reports"
             element={can('report:read') ? <ReportingPage /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/clients/:clientId/periods/:periodId/ca-review"
+            element={
+              can('ca_review:read') || can('workflow:read') || can('review:read') ? (
+                <CAReviewPage />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
           />
           <Route
             path="/clients/:clientId/periods/:periodId/workflows"

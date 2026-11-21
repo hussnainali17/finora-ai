@@ -670,7 +670,7 @@ async def test_agent_configuration_validation(env: Env, api: httpx.AsyncClient) 
     agents = {
         a["key"]: a for a in (await api.get(f"{API}/llm/agents", headers=env.hdr)).json()["agents"]
     }
-    assert list(agents) == list(AGENTS) and len(agents) == 4
+    assert list(agents) == list(AGENTS) and len(agents) == 5
     assert (agents["intake"]["default_alias"], agents["intake"]["fallback_alias"]) == (
         "fast-general",
         "claude-balanced",
@@ -1071,7 +1071,7 @@ def test_no_module_imports_a_provider_sdk() -> None:
 
 def test_only_the_gateway_and_health_check_make_outbound_http_calls() -> None:
     users = sorted(
-        str(p.relative_to(APP))
+        p.relative_to(APP).as_posix()
         for p in py_files()
         if re.search(r"^\s*(?:import httpx|from httpx)", p.read_text(), re.M)
     )
@@ -1079,7 +1079,7 @@ def test_only_the_gateway_and_health_check_make_outbound_http_calls() -> None:
 
 
 def test_no_code_outside_the_gateway_knows_the_chat_completions_endpoint() -> None:
-    hits = [str(p.relative_to(APP)) for p in py_files() if "chat/completions" in p.read_text()]
+    hits = [p.relative_to(APP).as_posix() for p in py_files() if "chat/completions" in p.read_text()]
     assert hits == ["llm/gateway.py"]
 
 
@@ -1108,7 +1108,7 @@ def test_provider_keys_exist_only_on_the_litellm_service_in_compose() -> None:
 
 
 def test_catalog_is_consistent() -> None:
-    assert len(AGENTS) == 4
+    assert len(AGENTS) == 5  # 4 pipeline agents + ca_review assistant
     for t in TASKS.values():
         assert t.agent in AGENTS
         assert t.requires <= {"structured_output", "tools", "vision"}

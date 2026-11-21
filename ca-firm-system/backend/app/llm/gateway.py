@@ -213,13 +213,14 @@ class LlmGateway:
         agent: str,
         task: str,
     ) -> tuple[str, Usage, Decimal | None, str | None]:
-        body = {
+        body: dict[str, Any] = {
             "model": model.alias,
             "messages": messages,
-            "temperature": 0,
             "max_tokens": max_tokens,
             "metadata": {"agent": agent, "task": task, "correlation_id": correlation_id_var.get()},
         }
+        if model.alias != "gpt-6-luna":
+            body["temperature"] = 0
         headers = {**self._auth(), "X-Request-ID": correlation_id_var.get() or ""}
         try:
             async with self._client(self._s.llm_timeout_seconds) as c:

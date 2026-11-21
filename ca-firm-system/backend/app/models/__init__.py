@@ -36,6 +36,11 @@ from app.models.llm import (
     LlmModelSetting,
     LlmTaskOverride,
 )
+from app.models.ca_review import (
+    CACorrectionProposal,
+    CAConversation,
+    CAMessage,
+)
 from app.models.reporting import AccountMapping, FinancialReport
 from app.models.workflows import WorkflowRun
 
@@ -43,6 +48,9 @@ __all__ = [
     "AccountMapping",
     "AccountingPeriod",
     "AuditEvent",
+    "CACorrectionProposal",
+    "CAConversation",
+    "CAMessage",
     "Client",
     "DataQualityFinding",
     "Document",
