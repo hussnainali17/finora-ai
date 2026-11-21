@@ -30,7 +30,7 @@ model_list:
       api_key: os.environ/GEMINI_API_KEY
   - model_name: gpt-6-luna
     litellm_params:
-      model: openai/gpt-6-luna:free          # CentAI free-tier model (OpenAI-compatible endpoint)
+      model: openai/gpt-6-luna          # CentAI model (OpenAI-compatible endpoint)
       api_base: https://api.cent-ai.dev/v1
       api_key: os.environ/CENT_AI_KEY
       drop_params: true

@@ -205,6 +205,7 @@ class ReportingAgent:
             adjusted_tb_rows=adjusted_tb_rows,
             pl_data=pl_data,
             bs_data=bs_data,
+            cf_data=cf_data,
             validation=validation_report.to_dict(),
         )
 
@@ -407,13 +408,15 @@ class ReportingAgent:
         pl_data: dict[str, Any],
         bs_data: dict[str, Any],
         validation: dict[str, Any],
+        cf_data: dict[str, Any] | None = None,
     ) -> bytes:
         """Constructs an Excel workbook with OpenPyXL containing:
 
         1. Adjusted Trial Balance
         2. Statement of Profit or Loss
         3. Statement of Financial Position
-        4. Validation Report
+        4. Statement of Cash Flows
+        5. Validation Report
         """
         wb = Workbook()
         ws_tb = wb.active
@@ -422,6 +425,7 @@ class ReportingAgent:
         # Headers styling
         header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
         header_fill = PatternFill(start_color="1F497D", end_color="1F497D", fill_type="solid")
+        section_font = Font(name="Calibri", size=11, bold=True)
         center_align = Alignment(horizontal="center", vertical="center")
         right_align = Alignment(horizontal="right", vertical="center")
 
@@ -438,46 +442,106 @@ class ReportingAgent:
             cell.alignment = center_align
 
         for r in adjusted_tb_rows:
+            def _to_float(v: Any) -> float:
+                try:
+                    return float(v) if v is not None else 0.0
+                except (ValueError, TypeError):
+                    return 0.0
+
             ws_tb.append([
-                r["account_code"], r["account_name"],
-                float(r["original_debit"]), float(r["original_credit"]),
-                float(r["adjustment_debit"]), float(r["adjustment_credit"]),
-                float(r["final_debit"]), float(r["final_credit"]),
+                r.get("account_code", ""),
+                r.get("account_name", ""),
+                _to_float(r.get("original_debit")),
+                _to_float(r.get("original_credit")),
+                _to_float(r.get("adjustment_debit")),
+                _to_float(r.get("adjustment_credit")),
+                _to_float(r.get("final_debit")),
+                _to_float(r.get("final_credit")),
             ])
 
         # P&L sheet
         ws_pl = wb.create_sheet(title="Profit and Loss")
         ws_pl.append(["Statement of Profit or Loss", f"Currency: {currency}"])
-        ws_pl.append(["Line Item", "Amount"])
-        ws_pl.append(["Revenue", float(pl_data["revenue"])])
-        ws_pl.append(["Cost of Goods Sold", float(pl_data["cost_of_goods_sold"])])
-        ws_pl.append(["Gross Profit", float(pl_data["gross_profit"])])
-        ws_pl.append(["Operating Expenses", float(pl_data["operating_expenses"])])
-        ws_pl.append(["Net Profit", float(pl_data["net_profit"])])
+        ws_pl.append(["Line Item", f"Amount ({currency})"])
+        for col_idx in (1, 2):
+            cell = ws_pl.cell(row=2, column=col_idx)
+            cell.font = header_font
+            cell.fill = header_fill
+
+        def _val(d: dict[str, Any], key: str, default: float = 0.0) -> float:
+            try:
+                v = d.get(key)
+                return float(v) if v is not None else default
+            except (ValueError, TypeError):
+                return default
+
+        ws_pl.append(["Revenue", _val(pl_data, "revenue")])
+        ws_pl.append(["Cost of Goods Sold", _val(pl_data, "cost_of_goods_sold")])
+        ws_pl.append(["Gross Profit", _val(pl_data, "gross_profit")])
+        ws_pl.append(["Operating Expenses", _val(pl_data, "operating_expenses")])
+        ws_pl.append(["Net Profit", _val(pl_data, "net_profit")])
 
         # Balance Sheet
         ws_bs = wb.create_sheet(title="Balance Sheet")
         ws_bs.append(["Statement of Financial Position", f"Currency: {currency}"])
-        ws_bs.append(["Line Item", "Amount"])
-        ws_bs.append(["Current Assets", float(bs_data["current_assets"])])
-        ws_bs.append(["Non-Current Assets", float(bs_data["non_current_assets"])])
-        ws_bs.append(["Total Assets", float(bs_data["total_assets"])])
-        ws_bs.append(["Current Liabilities", float(bs_data["current_liabilities"])])
-        ws_bs.append(["Non-Current Liabilities", float(bs_data["non_current_liabilities"])])
-        ws_bs.append(["Total Liabilities", float(bs_data["total_liabilities"])])
-        ws_bs.append(["Total Equity (incl. Current Year Profit)", float(bs_data["total_equity"])])
-        ws_bs.append(["Total Liabilities and Equity", float(bs_data["total_liabilities_and_equity"])])
+        ws_bs.append(["Line Item", f"Amount ({currency})"])
+        for col_idx in (1, 2):
+            cell = ws_bs.cell(row=2, column=col_idx)
+            cell.font = header_font
+            cell.fill = header_fill
+
+        ws_bs.append(["Current Assets", _val(bs_data, "current_assets")])
+        ws_bs.append(["Non-Current Assets", _val(bs_data, "non_current_assets")])
+        ws_bs.append(["Total Assets", _val(bs_data, "total_assets")])
+        ws_bs.append(["Current Liabilities", _val(bs_data, "current_liabilities")])
+        ws_bs.append(["Non-Current Liabilities", _val(bs_data, "non_current_liabilities")])
+        ws_bs.append(["Total Liabilities", _val(bs_data, "total_liabilities")])
+        ws_bs.append(["Total Equity (incl. Current Year Profit)", _val(bs_data, "total_equity")])
+        ws_bs.append(["Total Liabilities and Equity", _val(bs_data, "total_liabilities_and_equity")])
+
+        # Cash Flow sheet if available
+        if cf_data:
+            ws_cf = wb.create_sheet(title="Cash Flow")
+            ws_cf.append(["Statement of Cash Flows", f"Currency: {currency}"])
+            ws_cf.append(["Line Item", f"Amount ({currency})"])
+            for col_idx in (1, 2):
+                cell = ws_cf.cell(row=2, column=col_idx)
+                cell.font = header_font
+                cell.fill = header_fill
+
+            ws_cf.append(["Cash & Cash Equivalents (Beginning)", _val(cf_data, "cash_and_equivalents_start")])
+            ws_cf.append(["Net Cash from Operating Activities", _val(cf_data, "net_cash_from_operating_activities")])
+            ws_cf.append(["Net Cash from Investing Activities", _val(cf_data, "net_cash_from_investing_activities")])
+            ws_cf.append(["Net Cash from Financing Activities", _val(cf_data, "net_cash_from_financing_activities")])
+            ws_cf.append(["Net Change in Cash", _val(cf_data, "net_change_in_cash")])
+            ws_cf.append(["Cash & Cash Equivalents (Ending)", _val(cf_data, "cash_and_equivalents_end")])
 
         # Validation sheet
         ws_val = wb.create_sheet(title="Validation Checks")
         ws_val.append(["Check Name", "Severity", "Description", "Discrepancy"])
-        for issue in validation.get("issues", []):
-            ws_val.append([
-                issue.get("check_name"),
-                issue.get("severity"),
-                issue.get("description"),
-                issue.get("difference"),
-            ])
+        for col_idx in range(1, 5):
+            cell = ws_val.cell(row=1, column=col_idx)
+            cell.font = header_font
+            cell.fill = header_fill
+
+        issues = validation.get("issues", []) if isinstance(validation, dict) else []
+        if issues:
+            for issue in issues:
+                ws_val.append([
+                    issue.get("check_name", ""),
+                    issue.get("severity", ""),
+                    issue.get("description", ""),
+                    str(issue.get("difference", "")),
+                ])
+        else:
+            ws_val.append(["All Integrity Checks Passed", "INFO", "No discrepancies or balance errors detected.", "0"])
+
+        # Auto-fit column widths slightly for readability
+        for ws in wb.worksheets:
+            for col in ws.columns:
+                max_len = max(len(str(cell.value or "")) for cell in col)
+                col_letter = col[0].column_letter
+                ws.column_dimensions[col_letter].width = max(max_len + 3, 12)
 
         stream = io.BytesIO()
         wb.save(stream)

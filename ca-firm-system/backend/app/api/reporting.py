@@ -129,23 +129,49 @@ async def export_excel(
 
     report = await rep_svc.get_report(session, principal, report_id)
     agent = ReportingAgent()
-    data = report.data
+    data = report.data or {}
+
+    # Support both full_pack structure and standalone adjusted_trial_balance structure
+    adjusted_tb_rows = data.get("adjusted_tb", {}).get("rows") if isinstance(data.get("adjusted_tb"), dict) else None
+    if adjusted_tb_rows is None:
+        adjusted_tb_rows = data.get("rows", [])
+
+    pl_data = data.get("profit_and_loss") or {}
+    bs_data = data.get("balance_sheet") or {}
+    cf_data = data.get("cash_flow") or {}
+
+    # If the user selected an individual report that lacks P&L or BS, try to load the sibling full_pack
+    if report.report_type != "full_pack" and (not pl_data or not bs_data):
+        sibling_reports = await rep_svc.list_reports(
+            session, principal, client_id=client_id, period_id=period_id, report_type="full_pack"
+        )
+        if sibling_reports:
+            full_data = sibling_reports[0].data or {}
+            if not pl_data:
+                pl_data = full_data.get("profit_and_loss") or {}
+            if not bs_data:
+                bs_data = full_data.get("balance_sheet") or {}
+            if not cf_data:
+                cf_data = full_data.get("cash_flow") or {}
 
     excel_bytes = agent._build_excel_pack(
         client_id=client_id,
         period_id=period_id,
         currency=data.get("currency", "PKR"),
-        adjusted_tb_rows=data.get("adjusted_tb", {}).get("rows", []),
-        pl_data=data.get("profit_and_loss", {}),
-        bs_data=data.get("balance_sheet", {}),
+        adjusted_tb_rows=adjusted_tb_rows,
+        pl_data=pl_data,
+        bs_data=bs_data,
+        cf_data=cf_data,
         validation=report.validation_results or {},
     )
 
+    filename = f"financial_report_{report.report_type}_{period_id}.xlsx"
     return Response(
         content=excel_bytes,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={
-            "Content-Disposition": f'attachment; filename="financial_report_{report.report_type}_{period_id}.xlsx"',
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "Access-Control-Expose-Headers": "Content-Disposition",
             "X-Content-Type-Options": "nosniff",
         },
     )

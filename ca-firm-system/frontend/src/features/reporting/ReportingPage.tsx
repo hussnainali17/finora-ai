@@ -32,8 +32,8 @@ import {
 import { CheckCircle, Download, Error as ErrorIcon, Refresh, TaskAlt } from '@mui/icons-material';
 import { useParams } from 'react-router-dom';
 import {
+  downloadReportExcel,
   generateReports,
-  getExcelDownloadUrl,
   listReports,
   signOffReport,
 } from '../../services/reportingApi';
@@ -49,6 +49,7 @@ export function ReportingPage(): React.JSX.Element {
   const [tabIndex, setTabIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [signOffDialog, setSignOffDialog] = useState(false);
@@ -95,6 +96,20 @@ export function ReportingPage(): React.JSX.Element {
       setError(err instanceof Error ? err.message : 'Report generation failed');
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleDownloadExcel = async () => {
+    if (!clientId || !periodId || !selectedReport) return;
+    setDownloading(true);
+    setError(null);
+    try {
+      const filename = `financial_report_${selectedReport.report_type}_${periodId}.xlsx`;
+      await downloadReportExcel(clientId, periodId, selectedReport.id, filename);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Excel export failed');
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -162,9 +177,9 @@ export function ReportingPage(): React.JSX.Element {
           {selectedReport && (
             <Button
               variant="outlined"
-              startIcon={<Download />}
-              href={getExcelDownloadUrl(clientId ?? '', periodId ?? '', selectedReport.id)}
-              download
+              startIcon={downloading ? <CircularProgress size={16} /> : <Download />}
+              onClick={() => void handleDownloadExcel()}
+              disabled={downloading}
             >
               Export Excel
             </Button>
