@@ -105,6 +105,24 @@ async def sign_off_report(
 
     await session.commit()
     await session.refresh(report)
+
+    # Publish approved output to the Central Shared Data Layer
+    try:
+        from app.services.shared_data import publish_approved_accounting_output
+        await publish_approved_accounting_output(
+            session,
+            principal,
+            client_id=report.client_id,
+            period_id=report.period_id,
+            notes=notes or f"Published on CA sign-off of report {report.report_type}",
+        )
+    except Exception as exc:
+        logger.warning(
+            "Auto-publish to shared data layer skipped/failed on sign-off: %s",
+            exc,
+            extra={"report_id": str(report.id)},
+        )
+
     logger.info(
         "financial report signed off",
         extra={"report_id": str(report.id), "ca_id": str(principal.user_id)},
