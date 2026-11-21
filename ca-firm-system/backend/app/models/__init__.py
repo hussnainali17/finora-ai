@@ -42,11 +42,22 @@ from app.models.ca_review import (
     CAMessage,
 )
 from app.models.reporting import AccountMapping, FinancialReport
+from app.models.shared_data import ApprovedModuleOutput
+from app.models.taxation import (
+    MultiModuleWorkflowRun,
+    TaxCalculationRun,
+    TaxEngagement,
+    TaxpayerProfile,
+    TaxReturnDraft,
+    TaxWorkflowRun,
+    TaxWorkpaper,
+)
 from app.models.workflows import WorkflowRun
 
 __all__ = [
     "AccountMapping",
     "AccountingPeriod",
+    "ApprovedModuleOutput",
     "AuditEvent",
     "CACorrectionProposal",
     "CAConversation",
@@ -65,6 +76,7 @@ __all__ = [
     "LlmFirmPolicy",
     "LlmModelSetting",
     "LlmTaskOverride",
+    "MultiModuleWorkflowRun",
     "OutboxEvent",
     "PeriodAdjustment",
     "Permission",
@@ -74,6 +86,12 @@ __all__ = [
     "ReviewRun",
     "Role",
     "RolePermission",
+    "TaxCalculationRun",
+    "TaxEngagement",
+    "TaxpayerProfile",
+    "TaxReturnDraft",
+    "TaxWorkflowRun",
+    "TaxWorkpaper",
     "User",
     "UserClientAccess",
     "WorkflowRun",

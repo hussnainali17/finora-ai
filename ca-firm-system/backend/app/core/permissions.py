@@ -43,6 +43,12 @@ PERMISSIONS: Final[dict[str, str]] = {
     # Phase 9 — LangGraph Workflows
     "workflow:read": "View end-to-end workflow execution state and history",
     "workflow:execute": "Trigger, pause, or resume end-to-end agent workflows",
+    # Modular Architecture & Taxation
+    "tax:read": "View tax profiles, reconciliations, computations and returns",
+    "tax:manage": "Manage tax engagements, mappings, calculations and return drafts",
+    "tax:approve": "Approve tax calculations, book-to-tax adjustments and return filing packs (CA authority)",
+    "shared:read": "View central shared data layer records and published outputs",
+    "shared:publish": "Publish approved module outputs to the central shared data layer",
 }
 
 FIRM_ADMIN = "firm_admin"
@@ -89,6 +95,11 @@ ROLES: Final[dict[str, tuple[str, str, frozenset[str]]]] = {
                 "report:sign_off",
                 "workflow:read",
                 "workflow:execute",
+                "tax:read",
+                "tax:manage",
+                "tax:approve",
+                "shared:read",
+                "shared:publish",
             }
         ),
     ),
@@ -115,6 +126,10 @@ ROLES: Final[dict[str, tuple[str, str, frozenset[str]]]] = {
                 "report:generate",
                 "workflow:read",
                 "workflow:execute",
+                "tax:read",
+                "tax:manage",
+                "shared:read",
+                "shared:publish",
             }
         ),
     ),
@@ -131,6 +146,8 @@ ROLES: Final[dict[str, tuple[str, str, frozenset[str]]]] = {
                 "adjustment:read",
                 "report:read",
                 "workflow:read",
+                "tax:read",
+                "shared:read",
             }
         ),
     ),
