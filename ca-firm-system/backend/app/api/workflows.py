@@ -94,50 +94,6 @@ async def list_workflows(
     return [WorkflowRunOut.model_validate(r) for r in runs.all()]
 
 
-@router.get(
-    "/{workflow_id}",
-    response_model=WorkflowRunOut,
-    summary="Get current state and checkpoint of a workflow run",
-)
-async def get_workflow(
-    client_id: uuid.UUID,
-    period_id: uuid.UUID,
-    workflow_id: uuid.UUID,
-    session: SessionDep,
-    principal: Principal = Depends(requires("workflow:read")),
-) -> WorkflowRunOut:
-    await get_accessible_client(session, principal, client_id)
-    run = await session.scalar(
-        select(WorkflowRun).where(
-            WorkflowRun.id == workflow_id,
-            WorkflowRun.firm_id == principal.firm_id,
-            WorkflowRun.client_id == client_id,
-        )
-    )
-    if not run:
-        raise ValueError("Workflow run not found")
-    return WorkflowRunOut.model_validate(run)
-
-
-@router.post(
-    "/{workflow_id}/resume",
-    response_model=WorkflowRunOut,
-    summary="Resume a paused workflow after CA approval decision",
-)
-async def resume_workflow(
-    client_id: uuid.UUID,
-    period_id: uuid.UUID,
-    workflow_id: uuid.UUID,
-    session: SessionDep,
-    principal: Principal = Depends(requires("workflow:execute")),
-) -> WorkflowRunOut:
-    await get_accessible_client(session, principal, client_id)
-    orch = WorkflowOrchestrator()
-    run = await orch.resume_after_ca_approval(session, workflow_id)
-    await session.refresh(run)
-    return WorkflowRunOut.model_validate(run)
-
-
 # ----------------------------------------------------------------------------- Complete CA Workflow
 @router.post(
     "/complete/start",
@@ -232,4 +188,49 @@ async def resume_complete_workflow(
     )
     await session.refresh(run)
     return MultiModuleWorkflowRunOut.model_validate(run)
+
+
+# ----------------------------------------------------------------------------- Single-Module Accounting Workflow
+@router.get(
+    "/{workflow_id}",
+    response_model=WorkflowRunOut,
+    summary="Get current state and checkpoint of a workflow run",
+)
+async def get_workflow(
+    client_id: uuid.UUID,
+    period_id: uuid.UUID,
+    workflow_id: uuid.UUID,
+    session: SessionDep,
+    principal: Principal = Depends(requires("workflow:read")),
+) -> WorkflowRunOut:
+    await get_accessible_client(session, principal, client_id)
+    run = await session.scalar(
+        select(WorkflowRun).where(
+            WorkflowRun.id == workflow_id,
+            WorkflowRun.firm_id == principal.firm_id,
+            WorkflowRun.client_id == client_id,
+        )
+    )
+    if not run:
+        raise ValueError("Workflow run not found")
+    return WorkflowRunOut.model_validate(run)
+
+
+@router.post(
+    "/{workflow_id}/resume",
+    response_model=WorkflowRunOut,
+    summary="Resume a paused workflow after CA approval decision",
+)
+async def resume_workflow(
+    client_id: uuid.UUID,
+    period_id: uuid.UUID,
+    workflow_id: uuid.UUID,
+    session: SessionDep,
+    principal: Principal = Depends(requires("workflow:execute")),
+) -> WorkflowRunOut:
+    await get_accessible_client(session, principal, client_id)
+    orch = WorkflowOrchestrator()
+    run = await orch.resume_after_ca_approval(session, workflow_id)
+    await session.refresh(run)
+    return WorkflowRunOut.model_validate(run)
 
