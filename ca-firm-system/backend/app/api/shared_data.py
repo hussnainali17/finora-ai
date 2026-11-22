@@ -73,6 +73,11 @@ async def list_outputs(
 
 
 @router.get(
+    "/latest-accounting",
+    response_model=ApprovedModuleOutputOut | None,
+    summary="Get latest approved accounting output version",
+)
+@router.get(
     "/outputs/latest-accounting",
     response_model=ApprovedModuleOutputOut | None,
     summary="Get latest approved accounting output version",
