@@ -18,22 +18,33 @@ export interface TaxEngagementListOut {
   total: number;
 }
 
+export interface MissingInfoItem {
+  query_id: string;
+  field: string;
+  question: string;
+  severity: 'critical' | 'warning' | 'info';
+  statutory_basis?: string;
+}
+
 export interface TaxpayerProfile {
   id: string;
   firm_id: string;
   client_id: string;
   engagement_id: string;
-  tax_year: number;
+  version: number;
   legal_form: string;
-  business_name: string;
+  business_name?: string;
   ntn: string;
   strn: string | null;
-  residential_status: string;
   principal_activity: string | null;
+  business_sector?: string;
+  registered_branches?: Array<Record<string, unknown>>;
+  jurisdictions?: string[];
   applicable_obligations: string[];
-  missing_information: string[];
-  intake_facts: Record<string, unknown>;
-  verified_by_ca: boolean;
+  is_active_taxpayer?: boolean;
+  verified_attributes?: Record<string, unknown>;
+  missing_information: MissingInfoItem[];
+  verified_by_ca?: boolean;
   created_at: string;
   updated_at: string;
 }

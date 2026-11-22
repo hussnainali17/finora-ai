@@ -40,7 +40,7 @@ class TaxEngagementListOut(BaseModel):
 
 class TaxpayerProfileIn(BaseModel):
     legal_form: str = Field(default="private_company")
-    ntn: str = Field(max_length=32)
+    ntn: str | None = Field(default=None, max_length=32)
     strn: str | None = Field(default=None, max_length=32)
     principal_activity: str = Field(default="General Trading", max_length=255)
     business_sector: str = Field(default="Commercial", max_length=128)

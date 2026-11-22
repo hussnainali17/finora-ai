@@ -33,6 +33,7 @@ import {
 } from '@mui/icons-material';
 import { useWorkspace } from '../workspace/WorkspaceContext';
 import {
+  createTaxEngagement,
   listTaxEngagements,
   listTaxReturnDrafts,
   runTaxReview,
@@ -59,17 +60,28 @@ export const TaxFilingPage: React.FC = () => {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const ensureEngagement = async (): Promise<TaxEngagement | null> => {
+    if (!activeClient || !activePeriod) return null;
+    const engRes = await listTaxEngagements(activeClient.id, activePeriod.id);
+    if (engRes.items.length > 0) return engRes.items[0];
+    const currentYear = new Date().getFullYear();
+    return createTaxEngagement(activeClient.id, activePeriod.id, {
+      tax_year: currentYear,
+      tax_period_label: `TY${currentYear}`,
+      tax_type: 'composite',
+    });
+  };
+
   const loadData = async () => {
     if (!activeClient || !activePeriod) return;
     try {
       setLoading(true);
       setError(null);
-      const engRes = await listTaxEngagements(activeClient.id, activePeriod.id);
-      if (engRes.items.length === 0) {
+      const eng = await ensureEngagement();
+      if (!eng) {
         setEngagement(null);
         return;
       }
-      const eng = engRes.items[0];
       setEngagement(eng);
 
       const draftRes = await listTaxReturnDrafts(activeClient.id, activePeriod.id, eng.id);
@@ -87,11 +99,17 @@ export const TaxFilingPage: React.FC = () => {
   }, [activeClient, activePeriod]);
 
   const handleRunReview = async () => {
-    if (!activeClient || !activePeriod || !engagement) return;
+    if (!activeClient || !activePeriod) return;
     try {
       setRunning(true);
       setError(null);
-      await runTaxReview(activeClient.id, activePeriod.id, engagement.id);
+      let eng = engagement;
+      if (!eng) {
+        eng = await ensureEngagement();
+        if (!eng) throw new Error('Could not create tax engagement');
+        setEngagement(eng);
+      }
+      await runTaxReview(activeClient.id, activePeriod.id, eng.id);
       setMessage('Agent 4 Review & Filing Pack generated successfully.');
       await loadData();
     } catch (err: any) {

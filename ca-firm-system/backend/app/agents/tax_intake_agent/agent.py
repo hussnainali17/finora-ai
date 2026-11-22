@@ -59,11 +59,11 @@ class TaxIntakeAgent:
         )
         documents = list(docs_res.all())
         has_prior_returns = any(
-            any(kw in (d.filename + " " + (d.ocr_text or "")).lower() for kw in ("tax return", "iris", "it-1", "prior year"))
+            any(kw in (getattr(d, "original_filename", "") or "").lower() for kw in ("tax return", "iris", "it-1", "prior year", "return"))
             for d in documents
         )
         has_tax_payment_evidence = any(
-            any(kw in (d.filename + " " + (d.ocr_text or "")).lower() for kw in ("cpr", "challan", "tax payment", "147"))
+            any(kw in (getattr(d, "original_filename", "") or "").lower() for kw in ("cpr", "challan", "tax payment", "147", "payment"))
             for d in documents
         )
 
@@ -155,8 +155,8 @@ class TaxIntakeAgent:
         source_doc_index = [
             {
                 "document_id": str(d.id),
-                "filename": d.filename,
-                "document_type": d.document_type,
+                "filename": getattr(d, "original_filename", "") or getattr(d, "filename", "document"),
+                "document_type": getattr(d, "category", "other"),
                 "uploaded_at": d.created_at.isoformat() if d.created_at else None,
             }
             for d in documents

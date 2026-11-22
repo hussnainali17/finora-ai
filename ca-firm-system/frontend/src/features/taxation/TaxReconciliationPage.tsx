@@ -17,6 +17,7 @@ import {
   TableRow,
   Typography,
   Alert,
+  AlertTitle,
   Paper,
   RadioGroup,
   FormControlLabel,
@@ -30,6 +31,7 @@ import {
 } from '@mui/icons-material';
 import { useWorkspace } from '../workspace/WorkspaceContext';
 import {
+  createTaxEngagement,
   listTaxEngagements,
   listTaxWorkpapers,
   runTaxReconciliation,
@@ -50,17 +52,28 @@ export const TaxReconciliationPage: React.FC = () => {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const ensureEngagement = async (): Promise<TaxEngagement | null> => {
+    if (!activeClient || !activePeriod) return null;
+    const engRes = await listTaxEngagements(activeClient.id, activePeriod.id);
+    if (engRes.items.length > 0) return engRes.items[0];
+    const currentYear = new Date().getFullYear();
+    return createTaxEngagement(activeClient.id, activePeriod.id, {
+      tax_year: currentYear,
+      tax_period_label: `TY${currentYear}`,
+      tax_type: 'composite',
+    });
+  };
+
   const loadData = async () => {
     if (!activeClient || !activePeriod) return;
     try {
       setLoading(true);
       setError(null);
-      const engRes = await listTaxEngagements(activeClient.id, activePeriod.id);
-      if (engRes.items.length === 0) {
+      const eng = await ensureEngagement();
+      if (!eng) {
         setEngagement(null);
         return;
       }
-      const eng = engRes.items[0];
       setEngagement(eng);
 
       // Load existing workpapers
@@ -86,14 +99,20 @@ export const TaxReconciliationPage: React.FC = () => {
   }, [activeClient, activePeriod]);
 
   const handleRunReconciliation = async () => {
-    if (!activeClient || !activePeriod || !engagement) return;
+    if (!activeClient || !activePeriod) return;
     try {
       setRunning(true);
       setError(null);
+      let eng = engagement;
+      if (!eng) {
+        eng = await ensureEngagement();
+        if (!eng) throw new Error('Could not create tax engagement');
+        setEngagement(eng);
+      }
       await runTaxReconciliation(
         activeClient.id,
         activePeriod.id,
-        engagement.id,
+        eng.id,
         sourceMode,
         latestAccounting?.version,
       );
@@ -156,6 +175,17 @@ export const TaxReconciliationPage: React.FC = () => {
           {error}
         </Alert>
       )}
+
+      {/* Data Source Guide */}
+      <Alert severity="info" variant="outlined" sx={{ mb: 3, borderColor: '#93c5fd' }}>
+        <AlertTitle sx={{ fontWeight: 600 }}>How Agent 2 Ingests Financial Data</AlertTitle>
+        <strong>Mode A — Approved Accounting (Recommended):</strong> Agent 2 pulls the CA-approved Trial Balance,
+        P&L, and Balance Sheet from the Central Shared Data Layer. Requires Accounting to be completed and signed off first.
+        <br />
+        <strong>Mode B — Direct Client Records (Standalone):</strong> Agent 2 maps data directly from uploaded
+        client Trial Balance / GL exports. Use this when the Accounting Module has not been run yet. Upload source
+        documents in <strong>Accounting → File Intake & OCR</strong> first.
+      </Alert>
 
       {/* Source Selection Card */}
       <Card sx={{ mb: 4, border: '1px solid #e2e8f0', borderRadius: 2 }}>
