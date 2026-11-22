@@ -15,6 +15,7 @@ import {
   MenuItem,
   Stack,
   Tooltip,
+  Collapse,
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
@@ -29,7 +30,15 @@ import {
   Logout as LogoutIcon,
   SwapHoriz as SwapHorizIcon,
   CheckCircle as CheckCircleIcon,
-  AutoAwesome as AutoAwesomeIcon,
+  AccountBalance as TaxIcon,
+  Badge as ProfileIcon,
+  CompareArrows as ReconIcon,
+  Calculate as ComputeIcon,
+  Article as FilingIcon,
+  Share as ShareIcon,
+  Rule as ValidationIcon,
+  ExpandLess,
+  ExpandMore,
 } from '@mui/icons-material';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../features/auth/AuthContext';
@@ -51,6 +60,9 @@ export const Sidebar: React.FC = () => {
   } = useWorkspace();
 
   const [clientAnchor, setClientAnchor] = useState<null | HTMLElement>(null);
+  const [accountingOpen, setAccountingOpen] = useState<boolean>(true);
+  const [taxationOpen, setTaxationOpen] = useState<boolean>(true);
+  const [orchestrationOpen, setOrchestrationOpen] = useState<boolean>(true);
 
   const isActive = (path: string) => {
     if (path === '/' && location.pathname === '/') return true;
@@ -58,10 +70,10 @@ export const Sidebar: React.FC = () => {
     return false;
   };
 
-  const getWorkspacePath = (sub: string) => {
+  const getWorkspacePath = (module: string, sub?: string) => {
     if (activeClient && activePeriod) {
-      if (sub === 'intake') return `/clients/${activeClient.id}/periods/${activePeriod.id}`;
-      return `/clients/${activeClient.id}/periods/${activePeriod.id}/${sub}`;
+      if (!sub) return `/clients/${activeClient.id}/periods/${activePeriod.id}/${module}`;
+      return `/clients/${activeClient.id}/periods/${activePeriod.id}/${module}/${sub}`;
     }
     return '/clients';
   };
@@ -89,9 +101,15 @@ export const Sidebar: React.FC = () => {
         },
       }}
     >
-      <Box sx={{ p: 2.5 }}>
+      <Box sx={{ p: 2, overflowY: 'auto', flex: 1 }}>
         {/* Brand Header */}
-        <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3, cursor: 'pointer' }} onClick={() => navigate('/')}>
+        <Stack
+          direction="row"
+          alignItems="center"
+          spacing={1.5}
+          sx={{ mb: 2.5, cursor: 'pointer' }}
+          onClick={() => navigate('/')}
+        >
           <Box
             component="img"
             src="/finora-logo-dark.png"
@@ -114,14 +132,23 @@ export const Sidebar: React.FC = () => {
         <Box
           sx={{
             p: 1.5,
-            mb: 2.5,
-            borderRadius: '14px',
+            mb: 2,
+            borderRadius: '12px',
             bgcolor: 'rgba(30, 41, 59, 0.7)',
             border: '1px solid rgba(255, 255, 255, 0.08)',
             backdropFilter: 'blur(8px)',
           }}
         >
-          <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.68rem', letterSpacing: '0.05em' }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: '#94a3b8',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              fontSize: '0.65rem',
+              letterSpacing: '0.05em',
+            }}
+          >
             Active Workspace
           </Typography>
 
@@ -215,19 +242,19 @@ export const Sidebar: React.FC = () => {
           </Menu>
         </Box>
 
-        {/* Navigation Menu */}
-        <Typography variant="caption" sx={{ px: 1, color: '#64748b', fontWeight: 700, letterSpacing: '0.06em', fontSize: '0.68rem' }}>
-          OVERVIEW
+        {/* 1. MAIN MENU */}
+        <Typography variant="caption" sx={{ px: 1, color: '#64748b', fontWeight: 700, letterSpacing: '0.06em', fontSize: '0.65rem' }}>
+          MAIN MENU
         </Typography>
 
         <List sx={{ pt: 0.5, pb: 1 }}>
-          <ListItem disablePadding sx={{ mb: 0.5 }}>
+          <ListItem disablePadding sx={{ mb: 0.4 }}>
             <ListItemButton
               onClick={() => handleNav('/')}
               selected={isActive('/')}
               sx={{
-                borderRadius: '10px',
-                py: 1,
+                borderRadius: '8px',
+                py: 0.8,
                 px: 1.5,
                 color: isActive('/') ? '#ffffff' : '#94a3b8',
                 bgcolor: isActive('/') ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
@@ -235,21 +262,21 @@ export const Sidebar: React.FC = () => {
                 '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)', color: '#f8fafc' },
               }}
             >
-              <ListItemIcon sx={{ minWidth: 34, color: isActive('/') ? '#818cf8' : '#94a3b8' }}>
+              <ListItemIcon sx={{ minWidth: 32, color: isActive('/') ? '#818cf8' : '#94a3b8' }}>
                 <DashboardIcon fontSize="small" />
               </ListItemIcon>
-              <ListItemText primary="Dashboard" primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: 600 }} />
+              <ListItemText primary="Dashboard" primaryTypographyProps={{ fontSize: '0.82rem', fontWeight: 600 }} />
             </ListItemButton>
           </ListItem>
 
           {can('client:read') && (
-            <ListItem disablePadding sx={{ mb: 0.5 }}>
+            <ListItem disablePadding sx={{ mb: 0.4 }}>
               <ListItemButton
                 onClick={() => handleNav('/clients')}
                 selected={isActive('/clients') && !location.pathname.includes('/periods/')}
                 sx={{
-                  borderRadius: '10px',
-                  py: 1,
+                  borderRadius: '8px',
+                  py: 0.8,
                   px: 1.5,
                   color: isActive('/clients') && !location.pathname.includes('/periods/') ? '#ffffff' : '#94a3b8',
                   bgcolor: isActive('/clients') && !location.pathname.includes('/periods/') ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
@@ -257,216 +284,375 @@ export const Sidebar: React.FC = () => {
                   '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)', color: '#f8fafc' },
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 34, color: isActive('/clients') && !location.pathname.includes('/periods/') ? '#818cf8' : '#94a3b8' }}>
+                <ListItemIcon sx={{ minWidth: 32, color: isActive('/clients') && !location.pathname.includes('/periods/') ? '#818cf8' : '#94a3b8' }}>
                   <BusinessIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText primary="Companies & Clients" primaryTypographyProps={{ fontSize: '0.875rem', fontWeight: 600 }} />
+                <ListItemText primary="Companies & Clients" primaryTypographyProps={{ fontSize: '0.82rem', fontWeight: 600 }} />
               </ListItemButton>
             </ListItem>
           )}
         </List>
 
-        <Typography variant="caption" sx={{ px: 1, color: '#64748b', fontWeight: 700, letterSpacing: '0.06em', fontSize: '0.68rem', mt: 1, display: 'block' }}>
-          AUTONOMOUS CA PIPELINE
-        </Typography>
+        {/* 2. WORK MODULES: ACCOUNTING */}
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{ px: 1, mt: 1.5, mb: 0.5, cursor: 'pointer' }}
+          onClick={() => setAccountingOpen(!accountingOpen)}
+        >
+          <Typography variant="caption" sx={{ color: '#818cf8', fontWeight: 700, letterSpacing: '0.06em', fontSize: '0.65rem' }}>
+            1. ACCOUNTING MODULE
+          </Typography>
+          {accountingOpen ? <ExpandLess sx={{ fontSize: 16, color: '#818cf8' }} /> : <ExpandMore sx={{ fontSize: 16, color: '#818cf8' }} />}
+        </Stack>
 
-        <List sx={{ pt: 0.5, pb: 1 }}>
-          {/* Agent 1 */}
-          <ListItem disablePadding sx={{ mb: 0.5 }}>
-            <ListItemButton
-              onClick={() => handleNav(getWorkspacePath('intake'))}
-              selected={location.pathname.endsWith(activePeriod?.id ?? '') || location.pathname.includes('/documents/')}
-              sx={{
-                borderRadius: '10px',
-                py: 0.8,
-                px: 1.5,
-                color: location.pathname.endsWith(activePeriod?.id ?? '') ? '#ffffff' : '#94a3b8',
-                bgcolor: location.pathname.endsWith(activePeriod?.id ?? '') ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
-                border: location.pathname.endsWith(activePeriod?.id ?? '') ? '1px solid rgba(99, 102, 241, 0.4)' : '1px solid transparent',
-                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)', color: '#f8fafc' },
-              }}
-            >
-              <ListItemIcon sx={{ minWidth: 34, color: '#38bdf8' }}>
-                <CloudUploadIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText
-                primary="1. File Intake & OCR"
-                secondary="Agent 1 • Document Extraction"
-                primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: 600 }}
-                secondaryTypographyProps={{ fontSize: '0.68rem', color: '#64748b' }}
-              />
-            </ListItemButton>
-          </ListItem>
-
-          {/* Agent 2 */}
-          {can('review:read') && (
-            <ListItem disablePadding sx={{ mb: 0.5 }}>
+        <Collapse in={accountingOpen} timeout="auto" unmountOnExit>
+          <List sx={{ pt: 0, pb: 1 }}>
+            {/* Accounting Dashboard */}
+            <ListItem disablePadding sx={{ mb: 0.4 }}>
               <ListItemButton
-                onClick={() => handleNav(getWorkspacePath('review'))}
-                selected={location.pathname.includes('/review')}
+                onClick={() => handleNav(getWorkspacePath('accounting'))}
+                selected={location.pathname.endsWith('/accounting')}
                 sx={{
-                  borderRadius: '10px',
-                  py: 0.8,
+                  borderRadius: '8px',
+                  py: 0.6,
                   px: 1.5,
-                  color: location.pathname.includes('/review') ? '#ffffff' : '#94a3b8',
-                  bgcolor: location.pathname.includes('/review') ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
-                  border: location.pathname.includes('/review') ? '1px solid rgba(99, 102, 241, 0.4)' : '1px solid transparent',
+                  color: location.pathname.endsWith('/accounting') ? '#ffffff' : '#94a3b8',
+                  bgcolor: location.pathname.endsWith('/accounting') ? 'rgba(99, 102, 241, 0.25)' : 'transparent',
+                  border: location.pathname.endsWith('/accounting') ? '1px solid rgba(99, 102, 241, 0.5)' : '1px solid transparent',
                   '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)', color: '#f8fafc' },
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 34, color: '#a78bfa' }}>
-                  <FactCheckIcon fontSize="small" />
+                <ListItemIcon sx={{ minWidth: 32, color: '#818cf8' }}>
+                  <DashboardIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText
-                  primary="2. Accounting Review"
-                  secondary="Agent 2 • Anomaly & Reconciliation"
-                  primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: 600 }}
-                  secondaryTypographyProps={{ fontSize: '0.68rem', color: '#64748b' }}
-                />
+                <ListItemText primary="Accounting Dashboard" primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 600 }} />
               </ListItemButton>
             </ListItem>
-          )}
 
-          {/* Agent 3 */}
-          {can('adjustment:read') && (
-            <ListItem disablePadding sx={{ mb: 0.5 }}>
+            {/* File Intake & OCR */}
+            <ListItem disablePadding sx={{ mb: 0.4 }}>
               <ListItemButton
-                onClick={() => handleNav(getWorkspacePath('adjustments'))}
-                selected={location.pathname.includes('/adjustments')}
+                onClick={() => handleNav(getWorkspacePath('accounting', 'intake'))}
+                selected={location.pathname.includes('/accounting/intake') || (location.pathname.includes('/documents') && !location.pathname.includes('/orchestration/'))}
                 sx={{
-                  borderRadius: '10px',
-                  py: 0.8,
+                  borderRadius: '8px',
+                  py: 0.6,
                   px: 1.5,
-                  color: location.pathname.includes('/adjustments') ? '#ffffff' : '#94a3b8',
-                  bgcolor: location.pathname.includes('/adjustments') ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
-                  border: location.pathname.includes('/adjustments') ? '1px solid rgba(99, 102, 241, 0.4)' : '1px solid transparent',
+                  color: location.pathname.includes('/accounting/intake') ? '#ffffff' : '#94a3b8',
+                  bgcolor: location.pathname.includes('/accounting/intake') ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
+                  border: location.pathname.includes('/accounting/intake') ? '1px solid rgba(99, 102, 241, 0.4)' : '1px solid transparent',
                   '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)', color: '#f8fafc' },
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 34, color: '#f59e0b' }}>
-                  <BalanceIcon fontSize="small" />
+                <ListItemIcon sx={{ minWidth: 32, color: '#38bdf8' }}>
+                  <CloudUploadIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText
-                  primary="3. Period Adjustments"
-                  secondary="Agent 3 • Accruals & Depreciation"
-                  primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: 600 }}
-                  secondaryTypographyProps={{ fontSize: '0.68rem', color: '#64748b' }}
-                />
+                <ListItemText primary="File Intake & OCR" primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 500 }} />
               </ListItemButton>
             </ListItem>
-          )}
 
-          {/* Agent 4 */}
-          {can('report:read') && (
-            <ListItem disablePadding sx={{ mb: 0.5 }}>
+            {/* Accounting Review */}
+            {can('review:read') && (
+              <ListItem disablePadding sx={{ mb: 0.4 }}>
+                <ListItemButton
+                  onClick={() => handleNav(getWorkspacePath('accounting', 'review'))}
+                  selected={location.pathname.includes('/accounting/review') || (location.pathname.includes('/review') && !location.pathname.includes('/taxation/'))}
+                  sx={{
+                    borderRadius: '8px',
+                    py: 0.6,
+                    px: 1.5,
+                    color: location.pathname.includes('/accounting/review') ? '#ffffff' : '#94a3b8',
+                    bgcolor: location.pathname.includes('/accounting/review') ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
+                    border: location.pathname.includes('/accounting/review') ? '1px solid rgba(99, 102, 241, 0.4)' : '1px solid transparent',
+                    '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)', color: '#f8fafc' },
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 32, color: '#a78bfa' }}>
+                    <FactCheckIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary="Accounting Review" primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 500 }} />
+                </ListItemButton>
+              </ListItem>
+            )}
+
+            {/* Period Adjustments */}
+            {can('adjustment:read') && (
+              <ListItem disablePadding sx={{ mb: 0.4 }}>
+                <ListItemButton
+                  onClick={() => handleNav(getWorkspacePath('accounting', 'adjustments'))}
+                  selected={location.pathname.includes('/accounting/adjustments') || (location.pathname.includes('/adjustments') && !location.pathname.includes('/taxation/'))}
+                  sx={{
+                    borderRadius: '8px',
+                    py: 0.6,
+                    px: 1.5,
+                    color: location.pathname.includes('/accounting/adjustments') ? '#ffffff' : '#94a3b8',
+                    bgcolor: location.pathname.includes('/accounting/adjustments') ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
+                    border: location.pathname.includes('/accounting/adjustments') ? '1px solid rgba(99, 102, 241, 0.4)' : '1px solid transparent',
+                    '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)', color: '#f8fafc' },
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 32, color: '#f59e0b' }}>
+                    <BalanceIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary="Period Adjustments" primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 500 }} />
+                </ListItemButton>
+              </ListItem>
+            )}
+
+            {/* Financial Statements & CA Sign-Off */}
+            {can('report:read') && (
+              <ListItem disablePadding sx={{ mb: 0.4 }}>
+                <ListItemButton
+                  onClick={() => handleNav(getWorkspacePath('accounting', 'reports'))}
+                  selected={location.pathname.includes('/accounting/reports') || (location.pathname.includes('/reports') && !location.pathname.includes('/taxation/'))}
+                  sx={{
+                    borderRadius: '8px',
+                    py: 0.6,
+                    px: 1.5,
+                    color: location.pathname.includes('/accounting/reports') ? '#ffffff' : '#94a3b8',
+                    bgcolor: location.pathname.includes('/accounting/reports') ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
+                    border: location.pathname.includes('/accounting/reports') ? '1px solid rgba(99, 102, 241, 0.4)' : '1px solid transparent',
+                    '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)', color: '#f8fafc' },
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 32, color: '#10b981' }}>
+                    <AssessmentIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary="Financial Statements & Sign-Off" primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 500 }} />
+                </ListItemButton>
+              </ListItem>
+            )}
+          </List>
+        </Collapse>
+
+        {/* 3. WORK MODULES: TAXATION */}
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{ px: 1, mt: 1.5, mb: 0.5, cursor: 'pointer' }}
+          onClick={() => setTaxationOpen(!taxationOpen)}
+        >
+          <Typography variant="caption" sx={{ color: '#34d399', fontWeight: 700, letterSpacing: '0.06em', fontSize: '0.65rem' }}>
+            2. TAXATION MODULE
+          </Typography>
+          {taxationOpen ? <ExpandLess sx={{ fontSize: 16, color: '#34d399' }} /> : <ExpandMore sx={{ fontSize: 16, color: '#34d399' }} />}
+        </Stack>
+
+        <Collapse in={taxationOpen} timeout="auto" unmountOnExit>
+          <List sx={{ pt: 0, pb: 1 }}>
+            {/* Taxation Dashboard */}
+            <ListItem disablePadding sx={{ mb: 0.4 }}>
               <ListItemButton
-                onClick={() => handleNav(getWorkspacePath('reports'))}
-                selected={location.pathname.includes('/reports')}
+                onClick={() => handleNav(getWorkspacePath('taxation'))}
+                selected={location.pathname.endsWith('/taxation')}
                 sx={{
-                  borderRadius: '10px',
-                  py: 0.8,
+                  borderRadius: '8px',
+                  py: 0.6,
                   px: 1.5,
-                  color: location.pathname.includes('/reports') ? '#ffffff' : '#94a3b8',
-                  bgcolor: location.pathname.includes('/reports') ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
-                  border: location.pathname.includes('/reports') ? '1px solid rgba(99, 102, 241, 0.4)' : '1px solid transparent',
+                  color: location.pathname.endsWith('/taxation') ? '#ffffff' : '#94a3b8',
+                  bgcolor: location.pathname.endsWith('/taxation') ? 'rgba(16, 185, 129, 0.25)' : 'transparent',
+                  border: location.pathname.endsWith('/taxation') ? '1px solid rgba(16, 185, 129, 0.5)' : '1px solid transparent',
                   '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)', color: '#f8fafc' },
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 34, color: '#10b981' }}>
-                  <AssessmentIcon fontSize="small" />
+                <ListItemIcon sx={{ minWidth: 32, color: '#34d399' }}>
+                  <TaxIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText
-                  primary="4. Financial Statements"
-                  secondary="Agent 4 • P&L, BS & Sign-Off"
-                  primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: 600 }}
-                  secondaryTypographyProps={{ fontSize: '0.68rem', color: '#64748b' }}
-                />
+                <ListItemText primary="Taxation Dashboard" primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 600 }} />
               </ListItemButton>
             </ListItem>
-          )}
 
-          {/* Autonomous Workflow (LangGraph) */}
-          {can('workflow:read') && (
-            <ListItem disablePadding sx={{ mb: 0.5 }}>
+            {/* Agent 1: Tax Intake & Profile */}
+            <ListItem disablePadding sx={{ mb: 0.4 }}>
               <ListItemButton
-                onClick={() => handleNav(getWorkspacePath('workflows'))}
-                selected={location.pathname.includes('/workflows')}
+                onClick={() => handleNav(getWorkspacePath('taxation', 'profile'))}
+                selected={location.pathname.includes('/taxation/profile')}
                 sx={{
-                  borderRadius: '10px',
-                  py: 1,
+                  borderRadius: '8px',
+                  py: 0.6,
                   px: 1.5,
-                  color: '#ffffff',
-                  background: location.pathname.includes('/workflows')
-                    ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.35) 0%, rgba(6, 182, 212, 0.3) 100%)'
-                    : 'linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(6, 182, 212, 0.08) 100%)',
-                  border: '1px solid rgba(99, 102, 241, 0.3)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(6, 182, 212, 0.2) 100%)',
-                  },
+                  color: location.pathname.includes('/taxation/profile') ? '#ffffff' : '#94a3b8',
+                  bgcolor: location.pathname.includes('/taxation/profile') ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
+                  border: location.pathname.includes('/taxation/profile') ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid transparent',
+                  '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)', color: '#f8fafc' },
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 34, color: '#38bdf8' }}>
+                <ListItemIcon sx={{ minWidth: 32, color: '#10b981' }}>
+                  <ProfileIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary="Tax Intake & Profile" primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 500 }} />
+              </ListItemButton>
+            </ListItem>
+
+            {/* Agent 2: Tax Data & Reconciliation */}
+            <ListItem disablePadding sx={{ mb: 0.4 }}>
+              <ListItemButton
+                onClick={() => handleNav(getWorkspacePath('taxation', 'reconciliation'))}
+                selected={location.pathname.includes('/taxation/reconciliation')}
+                sx={{
+                  borderRadius: '8px',
+                  py: 0.6,
+                  px: 1.5,
+                  color: location.pathname.includes('/taxation/reconciliation') ? '#ffffff' : '#94a3b8',
+                  bgcolor: location.pathname.includes('/taxation/reconciliation') ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
+                  border: location.pathname.includes('/taxation/reconciliation') ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid transparent',
+                  '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)', color: '#f8fafc' },
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 32, color: '#0d9488' }}>
+                  <ReconIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary="Tax Data & Reconciliation" primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 500 }} />
+              </ListItemButton>
+            </ListItem>
+
+            {/* Agent 3: Tax Computation & Compliance */}
+            <ListItem disablePadding sx={{ mb: 0.4 }}>
+              <ListItemButton
+                onClick={() => handleNav(getWorkspacePath('taxation', 'computation'))}
+                selected={location.pathname.includes('/taxation/computation')}
+                sx={{
+                  borderRadius: '8px',
+                  py: 0.6,
+                  px: 1.5,
+                  color: location.pathname.includes('/taxation/computation') ? '#ffffff' : '#94a3b8',
+                  bgcolor: location.pathname.includes('/taxation/computation') ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
+                  border: location.pathname.includes('/taxation/computation') ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid transparent',
+                  '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)', color: '#f8fafc' },
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 32, color: '#059669' }}>
+                  <ComputeIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary="Tax Computation & Compliance" primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 500 }} />
+              </ListItemButton>
+            </ListItem>
+
+            {/* Agent 4: Tax Review & Filing Pack */}
+            <ListItem disablePadding sx={{ mb: 0.4 }}>
+              <ListItemButton
+                onClick={() => handleNav(getWorkspacePath('taxation', 'filing'))}
+                selected={location.pathname.includes('/taxation/filing')}
+                sx={{
+                  borderRadius: '8px',
+                  py: 0.6,
+                  px: 1.5,
+                  color: location.pathname.includes('/taxation/filing') ? '#ffffff' : '#94a3b8',
+                  bgcolor: location.pathname.includes('/taxation/filing') ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
+                  border: location.pathname.includes('/taxation/filing') ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid transparent',
+                  '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)', color: '#f8fafc' },
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 32, color: '#16a34a' }}>
+                  <FilingIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary="Tax Review & Filing Pack" primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 500 }} />
+              </ListItemButton>
+            </ListItem>
+          </List>
+        </Collapse>
+
+        {/* 4. ORCHESTRATION */}
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{ px: 1, mt: 1.5, mb: 0.5, cursor: 'pointer' }}
+          onClick={() => setOrchestrationOpen(!orchestrationOpen)}
+        >
+          <Typography variant="caption" sx={{ color: '#38bdf8', fontWeight: 700, letterSpacing: '0.06em', fontSize: '0.65rem' }}>
+            ORCHESTRATION
+          </Typography>
+          {orchestrationOpen ? <ExpandLess sx={{ fontSize: 16, color: '#38bdf8' }} /> : <ExpandMore sx={{ fontSize: 16, color: '#38bdf8' }} />}
+        </Stack>
+
+        <Collapse in={orchestrationOpen} timeout="auto" unmountOnExit>
+          <List sx={{ pt: 0, pb: 1 }}>
+            {/* Complete CA Workflow */}
+            <ListItem disablePadding sx={{ mb: 0.4 }}>
+              <ListItemButton
+                onClick={() => handleNav(getWorkspacePath('orchestration', 'workflow'))}
+                selected={location.pathname.includes('/orchestration/workflow')}
+                sx={{
+                  borderRadius: '8px',
+                  py: 0.6,
+                  px: 1.5,
+                  color: location.pathname.includes('/orchestration/workflow') ? '#ffffff' : '#94a3b8',
+                  bgcolor: location.pathname.includes('/orchestration/workflow') ? 'rgba(56, 189, 248, 0.25)' : 'transparent',
+                  border: location.pathname.includes('/orchestration/workflow') ? '1px solid rgba(56, 189, 248, 0.5)' : '1px solid transparent',
+                  '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)', color: '#f8fafc' },
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 32, color: '#38bdf8' }}>
                   <HubIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText
-                  primary="Autonomous Workflow"
-                  secondary="Full LangGraph Coordination"
-                  primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: 700 }}
-                  secondaryTypographyProps={{ fontSize: '0.68rem', color: '#93c5fd' }}
-                />
+                <ListItemText primary="Complete CA Workflow" primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 600 }} />
               </ListItemButton>
             </ListItem>
-          )}
 
-          {/* CA Review & AI Interaction */}
-          {(can('ca_review:read') || can('workflow:read') || can('review:read')) && (
-            <ListItem disablePadding sx={{ mb: 0.5 }}>
+            {/* Shared Data & Documents */}
+            <ListItem disablePadding sx={{ mb: 0.4 }}>
               <ListItemButton
-                onClick={() => handleNav(getWorkspacePath('ca-review'))}
-                selected={location.pathname.includes('/ca-review')}
+                onClick={() => handleNav(getWorkspacePath('orchestration', 'shared-data'))}
+                selected={location.pathname.includes('/orchestration/shared-data')}
                 sx={{
-                  borderRadius: '10px',
-                  py: 1,
+                  borderRadius: '8px',
+                  py: 0.6,
                   px: 1.5,
-                  color: '#ffffff',
-                  background: location.pathname.includes('/ca-review')
-                    ? 'linear-gradient(135deg, rgba(79, 70, 229, 0.45) 0%, rgba(14, 165, 233, 0.4) 100%)'
-                    : 'linear-gradient(135deg, rgba(79, 70, 229, 0.16) 0%, rgba(14, 165, 233, 0.12) 100%)',
-                  border: location.pathname.includes('/ca-review')
-                    ? '1px solid rgba(129, 140, 248, 0.6)'
-                    : '1px solid rgba(129, 140, 248, 0.3)',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.3) 0%, rgba(14, 165, 233, 0.25) 100%)',
-                  },
+                  color: location.pathname.includes('/orchestration/shared-data') ? '#ffffff' : '#94a3b8',
+                  bgcolor: location.pathname.includes('/orchestration/shared-data') ? 'rgba(56, 189, 248, 0.2)' : 'transparent',
+                  border: location.pathname.includes('/orchestration/shared-data') ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid transparent',
+                  '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)', color: '#f8fafc' },
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 34, color: '#a5b4fc' }}>
-                  <AutoAwesomeIcon fontSize="small" />
+                <ListItemIcon sx={{ minWidth: 32, color: '#a855f7' }}>
+                  <ShareIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText
-                  primary="CA Review & AI Chat"
-                  secondary="Ask, Correct & Re-execute"
-                  primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: 700 }}
-                  secondaryTypographyProps={{ fontSize: '0.68rem', color: '#c7d2fe' }}
-                />
+                <ListItemText primary="Shared Data & Documents" primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 500 }} />
               </ListItemButton>
             </ListItem>
-          )}
-        </List>
 
-        <Typography variant="caption" sx={{ px: 1, color: '#64748b', fontWeight: 700, letterSpacing: '0.06em', fontSize: '0.68rem', mt: 1, display: 'block' }}>
+            {/* Central Validation / Reports */}
+            <ListItem disablePadding sx={{ mb: 0.4 }}>
+              <ListItemButton
+                onClick={() => handleNav(getWorkspacePath('orchestration', 'validation'))}
+                selected={location.pathname.includes('/orchestration/validation')}
+                sx={{
+                  borderRadius: '8px',
+                  py: 0.6,
+                  px: 1.5,
+                  color: location.pathname.includes('/orchestration/validation') ? '#ffffff' : '#94a3b8',
+                  bgcolor: location.pathname.includes('/orchestration/validation') ? 'rgba(56, 189, 248, 0.2)' : 'transparent',
+                  border: location.pathname.includes('/orchestration/validation') ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid transparent',
+                  '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)', color: '#f8fafc' },
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 32, color: '#f59e0b' }}>
+                  <ValidationIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText primary="Central Validation / Reports" primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 500 }} />
+              </ListItemButton>
+            </ListItem>
+          </List>
+        </Collapse>
+
+        {/* 5. SYSTEM & SETTINGS */}
+        <Typography variant="caption" sx={{ px: 1, color: '#64748b', fontWeight: 700, letterSpacing: '0.06em', fontSize: '0.65rem' }}>
           SYSTEM & SETTINGS
         </Typography>
 
         <List sx={{ pt: 0.5, pb: 1 }}>
           {can('llm:read') && (
-            <ListItem disablePadding sx={{ mb: 0.5 }}>
+            <ListItem disablePadding sx={{ mb: 0.4 }}>
               <ListItemButton
                 onClick={() => handleNav('/settings/models')}
                 selected={isActive('/settings/models')}
                 sx={{
-                  borderRadius: '10px',
-                  py: 0.8,
+                  borderRadius: '8px',
+                  py: 0.6,
                   px: 1.5,
                   color: isActive('/settings/models') ? '#ffffff' : '#94a3b8',
                   bgcolor: isActive('/settings/models') ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
@@ -474,22 +660,22 @@ export const Sidebar: React.FC = () => {
                   '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)', color: '#f8fafc' },
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 34, color: '#94a3b8' }}>
+                <ListItemIcon sx={{ minWidth: 32, color: '#94a3b8' }}>
                   <SmartToyIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText primary="AI Models & Routing" primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: 500 }} />
+                <ListItemText primary="AI Models & Routing" primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 500 }} />
               </ListItemButton>
             </ListItem>
           )}
 
           {can('audit:read') && (
-            <ListItem disablePadding sx={{ mb: 0.5 }}>
+            <ListItem disablePadding sx={{ mb: 0.4 }}>
               <ListItemButton
                 onClick={() => handleNav('/audit')}
                 selected={isActive('/audit')}
                 sx={{
-                  borderRadius: '10px',
-                  py: 0.8,
+                  borderRadius: '8px',
+                  py: 0.6,
                   px: 1.5,
                   color: isActive('/audit') ? '#ffffff' : '#94a3b8',
                   bgcolor: isActive('/audit') ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
@@ -497,10 +683,10 @@ export const Sidebar: React.FC = () => {
                   '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)', color: '#f8fafc' },
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 34, color: '#94a3b8' }}>
+                <ListItemIcon sx={{ minWidth: 32, color: '#94a3b8' }}>
                   <ShieldIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText primary="Audit Logs" primaryTypographyProps={{ fontSize: '0.85rem', fontWeight: 500 }} />
+                <ListItemText primary="Audit Logs" primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 500 }} />
               </ListItemButton>
             </ListItem>
           )}
@@ -513,10 +699,10 @@ export const Sidebar: React.FC = () => {
           <Stack direction="row" alignItems="center" spacing={1.5} sx={{ overflow: 'hidden' }}>
             <Avatar
               sx={{
-                width: 36,
-                height: 36,
+                width: 34,
+                height: 34,
                 bgcolor: '#4f46e5',
-                fontSize: '0.875rem',
+                fontSize: '0.825rem',
                 fontWeight: 700,
               }}
             >
@@ -536,8 +722,8 @@ export const Sidebar: React.FC = () => {
                     boxShadow: '0 0 8px #10b981',
                   }}
                 />
-                <Typography variant="caption" sx={{ color: '#94a3b8', fontSize: '0.7rem' }}>
-                  AI Ready
+                <Typography variant="caption" sx={{ color: '#94a3b8', fontSize: '0.68rem' }}>
+                  AI Multi-Agent Ready
                 </Typography>
               </Stack>
             </Box>

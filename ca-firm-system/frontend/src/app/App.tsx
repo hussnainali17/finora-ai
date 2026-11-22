@@ -21,6 +21,17 @@ import { AuditLogPage } from '../features/audit/AuditLogPage';
 import { WorkspaceProvider } from '../features/workspace/WorkspaceContext';
 import { AppLayout } from '../components/layout/AppLayout';
 
+// Modular Architecture: Accounting, Taxation & Orchestration
+import { AccountingDashboardPage } from '../features/accounting/AccountingDashboardPage';
+import { TaxationDashboardPage } from '../features/taxation/TaxationDashboardPage';
+import { TaxIntakePage } from '../features/taxation/TaxIntakePage';
+import { TaxReconciliationPage } from '../features/taxation/TaxReconciliationPage';
+import { TaxComputationPage } from '../features/taxation/TaxComputationPage';
+import { TaxFilingPage } from '../features/taxation/TaxFilingPage';
+import { CompleteWorkflowPage } from '../features/orchestration/CompleteWorkflowPage';
+import { SharedDataPage } from '../features/orchestration/SharedDataPage';
+import { CentralValidationPage } from '../features/orchestration/CentralValidationPage';
+
 function Shell() {
   const { state, can } = useAuth();
 
@@ -37,9 +48,28 @@ function Shell() {
     <WorkspaceProvider>
       <AppLayout>
         <Routes>
+          {/* Main Menu */}
           <Route path="/" element={<HomePage />} />
           <Route path="/clients" element={<ClientsPage />} />
           <Route path="/clients/:clientId" element={<ClientDetailPage />} />
+
+          {/* Module 1: Accounting */}
+          <Route path="/clients/:clientId/periods/:periodId/accounting" element={<AccountingDashboardPage />} />
+          <Route path="/clients/:clientId/periods/:periodId/accounting/intake" element={<DocumentsPage />} />
+          <Route
+            path="/clients/:clientId/periods/:periodId/accounting/review"
+            element={can('review:read') ? <AccountingReviewPage /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/clients/:clientId/periods/:periodId/accounting/adjustments"
+            element={can('adjustment:read') ? <AdjustmentsPage /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/clients/:clientId/periods/:periodId/accounting/reports"
+            element={can('report:read') ? <ReportingPage /> : <Navigate to="/" replace />}
+          />
+
+          {/* Backward compatibility for original accounting routes */}
           <Route path="/clients/:clientId/periods/:periodId" element={<DocumentsPage />} />
           <Route
             path="/clients/:clientId/periods/:periodId/documents/:documentId/review"
@@ -75,6 +105,44 @@ function Shell() {
             path="/clients/:clientId/periods/:periodId/workflows"
             element={can('workflow:read') ? <WorkflowBoardPage /> : <Navigate to="/" replace />}
           />
+
+          {/* Module 2: Taxation */}
+          <Route
+            path="/clients/:clientId/periods/:periodId/taxation"
+            element={can('tax:read') || can('review:read') ? <TaxationDashboardPage /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/clients/:clientId/periods/:periodId/taxation/profile"
+            element={can('tax:read') || can('review:read') ? <TaxIntakePage /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/clients/:clientId/periods/:periodId/taxation/reconciliation"
+            element={can('tax:read') || can('review:read') ? <TaxReconciliationPage /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/clients/:clientId/periods/:periodId/taxation/computation"
+            element={can('tax:read') || can('review:read') ? <TaxComputationPage /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/clients/:clientId/periods/:periodId/taxation/filing"
+            element={can('tax:read') || can('review:read') ? <TaxFilingPage /> : <Navigate to="/" replace />}
+          />
+
+          {/* Orchestration */}
+          <Route
+            path="/clients/:clientId/periods/:periodId/orchestration/workflow"
+            element={can('workflow:read') || can('tax:read') ? <CompleteWorkflowPage /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/clients/:clientId/periods/:periodId/orchestration/shared-data"
+            element={can('shared:read') || can('tax:read') || can('review:read') ? <SharedDataPage /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/clients/:clientId/periods/:periodId/orchestration/validation"
+            element={can('shared:read') || can('tax:read') || can('review:read') ? <CentralValidationPage /> : <Navigate to="/" replace />}
+          />
+
+          {/* System & Settings */}
           <Route
             path="/settings/models"
             element={can('llm:read') ? <ModelSettingsPage /> : <Navigate to="/" replace />}
