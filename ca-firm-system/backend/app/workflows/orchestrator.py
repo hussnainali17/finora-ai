@@ -218,6 +218,33 @@ class WorkflowOrchestrator:
                 run.status = "completed"
                 state["status"] = "completed"
                 state["step"] = "completed"
+
+                # Publish to Central Shared Data Layer
+                try:
+                    from app.api.deps import Principal
+                    from app.services.shared_data import publish_approved_accounting_output
+
+                    actor_id = run.initiated_by or uuid.uuid4()
+                    system_principal = Principal(
+                        user_id=actor_id,
+                        firm_id=firm_id,
+                        email="system@orchestrator.internal",
+                        full_name="Workflow System",
+                        role_key="ca_reviewer",
+                        permissions=frozenset({"shared:publish", "client:read"}),
+                        session_id=uuid.uuid4(),
+                    )
+                    pub_output = await publish_approved_accounting_output(
+                        session,
+                        system_principal,
+                        client_id=client_id,
+                        period_id=period_id,
+                        notes="Auto-published from completed Accounting Workflow",
+                    )
+                    state["published_output_id"] = str(pub_output.id)
+                except Exception as pub_exc:
+                    logger.warning("Could not auto-publish accounting output to shared data layer: %s", pub_exc)
+
                 flag_modified(run, "state_data")
                 await session.commit()
                 await self._emit_status(run)
@@ -279,3 +306,7 @@ class WorkflowOrchestrator:
             await pub.publish(WORKFLOW_STATUS, str(run.id), envelope)
         except Exception:
             logger.warning("failed to publish workflow-status kafka event")
+
+
+AccountingWorkflowOrchestrator = WorkflowOrchestrator
+

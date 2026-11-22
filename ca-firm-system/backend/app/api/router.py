@@ -13,6 +13,8 @@ from app.api import (
     kafka_topics,
     llm,
     reporting,
+    shared_data,
+    taxation,
     users,
     workflows,
 )
@@ -29,6 +31,8 @@ api_router.include_router(audit.router)
 api_router.include_router(accounting_review.router)
 api_router.include_router(adjustments.router)
 api_router.include_router(reporting.router)
+api_router.include_router(shared_data.router)
+api_router.include_router(taxation.router)
 api_router.include_router(workflows.router)
 api_router.include_router(ca_review.router)
 api_router.include_router(kafka_topics.router)
