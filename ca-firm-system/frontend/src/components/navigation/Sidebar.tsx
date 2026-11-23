@@ -293,6 +293,59 @@ export const Sidebar: React.FC = () => {
           )}
         </List>
 
+        {/* CENTRAL DOCUMENT INTELLIGENCE (SHARED INGESTION LAYER) */}
+        <Typography variant="caption" sx={{ px: 1, color: '#38bdf8', fontWeight: 700, letterSpacing: '0.06em', fontSize: '0.65rem' }}>
+          CENTRAL SERVICES
+        </Typography>
+
+        <List sx={{ pt: 0.5, pb: 1 }}>
+          <ListItem disablePadding sx={{ mb: 0.4 }}>
+            <ListItemButton
+              onClick={() => handleNav(getWorkspacePath('documents'))}
+              selected={
+                location.pathname.endsWith('/documents') ||
+                (location.pathname.includes('/documents') &&
+                  !location.pathname.includes('/accounting') &&
+                  !location.pathname.includes('/taxation'))
+              }
+              sx={{
+                borderRadius: '8px',
+                py: 0.8,
+                px: 1.5,
+                color:
+                  location.pathname.endsWith('/documents') ||
+                  (location.pathname.includes('/documents') &&
+                    !location.pathname.includes('/accounting'))
+                    ? '#ffffff'
+                    : '#94a3b8',
+                bgcolor:
+                  location.pathname.endsWith('/documents') ||
+                  (location.pathname.includes('/documents') &&
+                    !location.pathname.includes('/accounting'))
+                    ? 'rgba(56, 189, 248, 0.25)'
+                    : 'transparent',
+                border:
+                  location.pathname.endsWith('/documents') ||
+                  (location.pathname.includes('/documents') &&
+                    !location.pathname.includes('/accounting'))
+                    ? '1px solid rgba(56, 189, 248, 0.5)'
+                    : '1px solid transparent',
+                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)', color: '#f8fafc' },
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 32, color: '#38bdf8' }}>
+                <CloudUploadIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText
+                primary="Central Document Upload"
+                secondary="OCR & Routing (Accounting, Tax, Audit)"
+                primaryTypographyProps={{ fontSize: '0.82rem', fontWeight: 600 }}
+                secondaryTypographyProps={{ fontSize: '0.68rem', color: '#64748b' }}
+              />
+            </ListItemButton>
+          </ListItem>
+        </List>
+
         {/* 2. WORK MODULES: ACCOUNTING */}
         <Stack
           direction="row"
@@ -331,11 +384,11 @@ export const Sidebar: React.FC = () => {
               </ListItemButton>
             </ListItem>
 
-            {/* File Intake & OCR */}
+            {/* Agent 1: Intake & Preparation */}
             <ListItem disablePadding sx={{ mb: 0.4 }}>
               <ListItemButton
                 onClick={() => handleNav(getWorkspacePath('accounting', 'intake'))}
-                selected={location.pathname.includes('/accounting/intake') || (location.pathname.includes('/documents') && !location.pathname.includes('/orchestration/'))}
+                selected={location.pathname.includes('/accounting/intake')}
                 sx={{
                   borderRadius: '8px',
                   py: 0.6,
@@ -346,10 +399,15 @@ export const Sidebar: React.FC = () => {
                   '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)', color: '#f8fafc' },
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 32, color: '#38bdf8' }}>
-                  <CloudUploadIcon fontSize="small" />
+                <ListItemIcon sx={{ minWidth: 32, color: '#818cf8' }}>
+                  <FactCheckIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText primary="File Intake & OCR" primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 500 }} />
+                <ListItemText
+                  primary="Agent 1: Intake & Preparation"
+                  secondary="COA Mapping, Duplicates & Completeness"
+                  primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 500 }}
+                  secondaryTypographyProps={{ fontSize: '0.65rem', color: '#64748b' }}
+                />
               </ListItemButton>
             </ListItem>
 

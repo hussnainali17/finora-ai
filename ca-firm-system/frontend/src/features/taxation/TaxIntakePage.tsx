@@ -44,7 +44,9 @@ import {
   ExpandLess as CollapseIcon,
   ArrowForward as ArrowIcon,
   AutoFixHigh as AutoIcon,
+  CloudUpload as CloudUploadIcon,
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { useWorkspace } from '../workspace/WorkspaceContext';
 import {
   createTaxEngagement,
@@ -84,6 +86,7 @@ const SEVERITY_COLOR: Record<string, string> = {
 };
 
 export const TaxIntakePage: React.FC = () => {
+  const navigate = useNavigate();
   const { activeClient, activePeriod } = useWorkspace();
   const [engagement, setEngagement] = useState<TaxEngagement | null>(null);
   const [profile, setProfile] = useState<TaxpayerProfile | null>(null);
@@ -218,6 +221,15 @@ export const TaxIntakePage: React.FC = () => {
         </Box>
 
         <Stack direction="row" spacing={1.5}>
+          <Button
+            variant="outlined"
+            startIcon={<CloudUploadIcon />}
+            onClick={() =>
+              navigate(`/clients/${activeClient.id}/periods/${activePeriod.id}/documents`)
+            }
+          >
+            Central Document Upload
+          </Button>
           <Tooltip title="Manually configure taxpayer details before execution">
             <Button
               variant="outlined"

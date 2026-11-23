@@ -287,7 +287,10 @@ export default function DocumentsPage() {
         <Link component={RouterLink} to={`/clients/${clientId}`} underline="hover">
           {client.name}
         </Link>
-        <Typography color="text.primary">{period.label}</Typography>
+        <Typography color="text.secondary">{period.label}</Typography>
+        <Typography color="text.primary" fontWeight={600}>
+          Central Document Upload
+        </Typography>
       </Breadcrumbs>
 
       {/* Period Header */}
@@ -318,10 +321,10 @@ export default function DocumentsPage() {
             <Button
               variant="outlined"
               component={RouterLink}
-              to={`/clients/${clientId}/periods/${periodId}/accounting/intake`}
+              to={`/clients/${clientId}/periods/${periodId}/accounting`}
               startIcon={<AccountingIcon />}
             >
-              Accounting
+              Accounting Module
             </Button>
             <Button
               variant="outlined"
@@ -329,7 +332,7 @@ export default function DocumentsPage() {
               to={`/clients/${clientId}/periods/${periodId}/taxation`}
               startIcon={<TaxIcon />}
             >
-              Taxation
+              Taxation Module
             </Button>
             <Button
               variant="outlined"

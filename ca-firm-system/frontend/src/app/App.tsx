@@ -53,6 +53,9 @@ function Shell() {
           <Route path="/clients" element={<ClientsPage />} />
           <Route path="/clients/:clientId" element={<ClientDetailPage />} />
 
+          {/* Central Shared Layer: Document Intelligence */}
+          <Route path="/clients/:clientId/periods/:periodId/documents" element={<DocumentsPage />} />
+
           {/* Module 1: Accounting */}
           <Route path="/clients/:clientId/periods/:periodId/accounting" element={<AccountingDashboardPage />} />
           <Route path="/clients/:clientId/periods/:periodId/accounting/intake" element={<DocumentsPage />} />
