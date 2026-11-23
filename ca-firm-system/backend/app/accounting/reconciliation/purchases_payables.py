@@ -23,7 +23,7 @@ from datetime import date
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Any
 
-from app.accounting.reconciliation._types import FindingData, ReconciliationResult, ScheduleData
+from app.accounting.reconciliation._types import FindingData, ReconciliationResult, ScheduleData, flatten_rows
 
 logger = logging.getLogger("app.accounting.purchases_payables")
 
@@ -71,14 +71,7 @@ def check_purchases_payables(
     findings: list[FindingData] = []
     today = period_end
 
-    ap_rows: list[dict[str, Any]] = []
-    for table in tables:
-        table_id = str(table.get("table_id", ""))
-        document_id = str(table.get("document_id", ""))
-        for row in table.get("rows", []):
-            row["_table_id"] = table_id
-            row["_document_id"] = document_id
-            ap_rows.append(row)
+    ap_rows: list[dict[str, Any]] = flatten_rows(tables)
 
     if not ap_rows:
         return ReconciliationResult(
@@ -104,6 +97,42 @@ def check_purchases_payables(
                         "document_id": row.get("_document_id"),
                         "row_index": row.get("_row_index", idx),
                     },
+                )
+            )
+
+    # ------------------------------------------------------------------ Check 1b: Duplicate purchase reference
+    seen_references: dict[str, list[int]] = defaultdict(list)
+    for idx, row in enumerate(ap_rows):
+        ref = str(row.get("reference") or row.get("invoice_number") or row.get("po_number") or "").strip()
+        if ref:
+            seen_references[ref].append(idx)
+
+    for ref, indices in seen_references.items():
+        if len(indices) > 1:
+            first_row = ap_rows[indices[0]]
+            findings.append(
+                FindingData(
+                    finding_type="duplicate_purchase_reference",
+                    severity="error",
+                    title=f"Duplicate purchase reference: {ref}",
+                    description=(
+                        f"Purchase reference '{ref}' appears {len(indices)} times "
+                        f"in rows {indices}."
+                    ),
+                    source_ref={
+                        "table_id": first_row.get("_table_id"),
+                        "document_id": first_row.get("_document_id"),
+                        "row_index": indices[0],
+                    },
+                    evidence_refs=[
+                        {
+                            "table_id": ap_rows[i].get("_table_id"),
+                            "document_id": ap_rows[i].get("_document_id"),
+                            "row_index": ap_rows[i].get("_row_index", i),
+                            "description": f"Duplicate occurrence {n + 1}",
+                        }
+                        for n, i in enumerate(indices[1:])
+                    ],
                 )
             )
 

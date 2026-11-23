@@ -22,7 +22,7 @@ from datetime import date, timedelta
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Any
 
-from app.accounting.reconciliation._types import FindingData, ReconciliationResult, ScheduleData
+from app.accounting.reconciliation._types import FindingData, ReconciliationResult, ScheduleData, flatten_rows
 
 logger = logging.getLogger("app.accounting.bank_cash")
 
@@ -78,6 +78,8 @@ def check_bank_cash(
         ReconciliationResult with findings, bank recon schedule, and summary.
     """
     findings: list[FindingData] = []
+    bank_statement_rows = flatten_rows(bank_statement_rows)
+    cash_book_rows = flatten_rows(cash_book_rows)
 
     # Index cash book rows by reference then amount for matching
     cash_by_ref: dict[str, list[int]] = defaultdict(list)
@@ -169,7 +171,7 @@ def check_bank_cash(
                 )
             findings.append(
                 FindingData(
-                    finding_type="unreconciled_bank_entry",
+                    finding_type="unmatched_bank_entry",
                     severity="warning",
                     title="Unreconciled bank entry",
                     description=(

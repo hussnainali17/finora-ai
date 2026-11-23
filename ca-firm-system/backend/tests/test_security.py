@@ -25,8 +25,8 @@ class TestCryptographicSecurity:
         password = "ExtremelySecurePassword123!"
         hashed = hash_password(password)
         assert hashed.startswith("$argon2id$")
-        assert verify_password(password, hashed) is True
-        assert verify_password("WrongPassword!", hashed) is False
+        assert verify_password(hashed, password) is True
+        assert verify_password(hashed, "WrongPassword!") is False
 
     def test_unique_salts(self):
         password = "SamePasswordForBoth"

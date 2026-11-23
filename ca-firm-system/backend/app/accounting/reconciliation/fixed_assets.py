@@ -23,7 +23,7 @@ from datetime import date
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Any
 
-from app.accounting.reconciliation._types import FindingData, ReconciliationResult, ScheduleData
+from app.accounting.reconciliation._types import FindingData, ReconciliationResult, ScheduleData, flatten_rows
 
 logger = logging.getLogger("app.accounting.fixed_assets")
 
@@ -85,6 +85,7 @@ def check_fixed_assets(
     """
     findings: list[FindingData] = []
     schedule_rows = []
+    asset_register_rows = flatten_rows(asset_register_rows)
 
     opening_total = ZERO
     additions_total = ZERO
@@ -159,7 +160,7 @@ def check_fixed_assets(
         if status == "active" and nbv <= ZERO and cost > ZERO:
             findings.append(
                 FindingData(
-                    finding_type="fully_depreciated_still_active",
+                    finding_type="fully_depreciated_active_asset",
                     severity="warning",
                     title=f"Fully depreciated asset still active: {label}",
                     description=(

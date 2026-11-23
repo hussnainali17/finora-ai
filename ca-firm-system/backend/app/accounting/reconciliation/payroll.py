@@ -22,7 +22,7 @@ from datetime import date
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Any
 
-from app.accounting.reconciliation._types import FindingData, ReconciliationResult, ScheduleData
+from app.accounting.reconciliation._types import FindingData, ReconciliationResult, ScheduleData, flatten_rows
 
 logger = logging.getLogger("app.accounting.payroll")
 
@@ -70,6 +70,7 @@ def check_payroll(
         ReconciliationResult with findings, payroll summary schedule, and summary.
     """
     findings: list[FindingData] = []
+    payroll_rows = flatten_rows(payroll_rows)
 
     total_gross = ZERO
     total_net = ZERO

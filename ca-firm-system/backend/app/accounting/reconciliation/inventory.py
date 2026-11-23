@@ -22,7 +22,7 @@ from datetime import date
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Any
 
-from app.accounting.reconciliation._types import FindingData, ReconciliationResult, ScheduleData
+from app.accounting.reconciliation._types import FindingData, ReconciliationResult, ScheduleData, flatten_rows
 
 logger = logging.getLogger("app.accounting.inventory")
 
@@ -62,6 +62,9 @@ def check_inventory(
         ReconciliationResult with findings, inventory movement schedule, and summary.
     """
     findings: list[FindingData] = []
+    opening_rows = flatten_rows(opening_rows)
+    movement_rows = flatten_rows(movement_rows)
+    closing_rows = flatten_rows(closing_rows)
 
     # Index by item_code
     opening: dict[str, Decimal] = {}
@@ -90,7 +93,7 @@ def check_inventory(
         if qty < ZERO:
             findings.append(
                 FindingData(
-                    finding_type="negative_opening_quantity",
+                    finding_type="negative_quantity",
                     severity="error",
                     title=f"Negative opening quantity: item {code}",
                     description=f"Item '{code}' has negative opening quantity: {qty}.",
@@ -145,7 +148,7 @@ def check_inventory(
         if qty < ZERO:
             findings.append(
                 FindingData(
-                    finding_type="negative_closing_quantity",
+                    finding_type="negative_quantity",
                     severity="error",
                     title=f"Negative closing quantity: item {code}",
                     description=f"Item '{code}' has negative closing quantity: {qty}.",
@@ -179,7 +182,7 @@ def check_inventory(
         if abs(variance) > Decimal("0.01"):
             findings.append(
                 FindingData(
-                    finding_type="inventory_movement_imbalance",
+                    finding_type="inventory_imbalance",
                     severity="error",
                     title=f"Inventory movement imbalance: item {code}",
                     description=(

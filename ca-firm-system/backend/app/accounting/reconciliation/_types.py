@@ -43,4 +43,26 @@ class ReconciliationResult:
     summary: dict  # {total_findings, by_severity, totals, ...}
 
 
-__all__ = ["FindingData", "ScheduleData", "ReconciliationResult"]
+def flatten_rows(items: list[dict]) -> list[dict]:
+    """Flattens a list of table dicts (each having a 'rows' key) or returns plain rows.
+
+    Preserves _table_id and _document_id from the parent table if present.
+    """
+    rows: list[dict] = []
+    for item in items:
+        if isinstance(item, dict) and "rows" in item and isinstance(item["rows"], list):
+            table_id = str(item.get("table_id", ""))
+            doc_id = str(item.get("document_id", ""))
+            for r in item["rows"]:
+                r_copy = dict(r)
+                if table_id and "_table_id" not in r_copy:
+                    r_copy["_table_id"] = table_id
+                if doc_id and "_document_id" not in r_copy:
+                    r_copy["_document_id"] = doc_id
+                rows.append(r_copy)
+        elif isinstance(item, dict):
+            rows.append(item)
+    return rows
+
+
+__all__ = ["FindingData", "ScheduleData", "ReconciliationResult", "flatten_rows"]
