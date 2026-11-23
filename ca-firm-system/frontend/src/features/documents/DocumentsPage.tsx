@@ -42,6 +42,7 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link as RouterLink, useParams } from 'react-router-dom';
 import { Can } from '../auth/Can';
 import { formatBytes, formatDate } from '../clients/format';
+import { useWorkspace } from '../workspace/WorkspaceContext';
 import { getClient, listPeriods } from '../../services/clientsApi';
 import {
   deleteDocument,
@@ -93,7 +94,14 @@ const ACCEPT = '.pdf,.xlsx,.xls,.csv,.png,.jpg,.jpeg';
 type Notice = { severity: 'success' | 'error' | 'warning' | 'info'; text: string };
 
 export default function DocumentsPage() {
-  const { clientId = '', periodId = '' } = useParams();
+  const { clientId: paramClientId, periodId: paramPeriodId } = useParams<{
+    clientId?: string;
+    periodId?: string;
+  }>();
+  const { activeClient, activePeriod } = useWorkspace();
+  const clientId = paramClientId || activeClient?.id || '';
+  const periodId = paramPeriodId || activePeriod?.id || '';
+
   const [client, setClient] = useState<Client | null>(null);
   const [period, setPeriod] = useState<Period | null>(null);
   const [data, setData] = useState<Page<DocumentRecord> | null>(null);
@@ -119,14 +127,22 @@ export default function DocumentsPage() {
   const [sharing, setSharing] = useState(false);
 
   useEffect(() => {
+    if (!clientId || !periodId) return;
     Promise.all([getClient(clientId), listPeriods(clientId)])
       .then(([c, ps]) => {
         setClient(c);
         const p = ps.find((x) => x.id === periodId) ?? null;
-        if (!p) setLoadError('Accounting period not found.');
+        if (!p) {
+          setLoadError('Accounting period not found.');
+        } else {
+          setLoadError(null);
+        }
         setPeriod(p);
       })
-      .catch(() => setLoadError('Client or period not found.'));
+      .catch((err) => {
+        console.error('Failed to load client or period:', err);
+        setLoadError('Client or period not found.');
+      });
   }, [clientId, periodId]);
 
   // Keep category in sync when upload module changes
@@ -135,17 +151,22 @@ export default function DocumentsPage() {
     setCategory(defaultCat);
   }, [uploadModule]);
 
-  const refresh = useCallback(
-    () =>
-      listDocuments(clientId, periodId, {
-        limit: PAGE_SIZE,
-        offset: page * PAGE_SIZE,
-        module: activeTab,
+  const refresh = useCallback(() => {
+    if (!clientId || !periodId) return;
+    listDocuments(clientId, periodId, {
+      limit: PAGE_SIZE,
+      offset: page * PAGE_SIZE,
+      module: activeTab,
+    })
+      .then((res) => {
+        setData(res);
+        setLoadError(null);
       })
-        .then(setData)
-        .catch(() => setLoadError('Failed to load documents.')),
-    [clientId, periodId, page, activeTab],
-  );
+      .catch((err) => {
+        console.error('Failed to load documents:', err);
+        setLoadError('Failed to load documents.');
+      });
+  }, [clientId, periodId, page, activeTab]);
 
   useEffect(() => {
     void refresh();
@@ -267,7 +288,41 @@ export default function DocumentsPage() {
     }
   }
 
-  if (loadError) return <Alert severity="error">{loadError}</Alert>;
+  if (!clientId || !periodId) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="info" sx={{ borderRadius: 2 }}>
+          Please select an active client company and accounting period from the workspace switcher above to view and upload documents.
+        </Alert>
+      </Box>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert
+          severity="error"
+          sx={{ borderRadius: 2 }}
+          action={
+            <Button
+              color="inherit"
+              size="small"
+              onClick={() => {
+                setLoadError(null);
+                void refresh();
+              }}
+            >
+              Retry
+            </Button>
+          }
+        >
+          {loadError}
+        </Alert>
+      </Box>
+    );
+  }
+
   if (!client || !period) return <CircularProgress aria-label="Loading period" />;
   const canUpload = period.status === 'open' && client.status === 'active';
 

@@ -301,7 +301,7 @@ async def list_documents(
         Document.firm_id == principal.firm_id,
         Document.deleted_at.is_(None),
     ]
-    if module:
+    if module and module.lower().strip() != "all":
         mod = module.lower().strip()
         ref_subq = (
             select(DocumentModuleReference.document_id)
