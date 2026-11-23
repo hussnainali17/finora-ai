@@ -262,14 +262,14 @@ export const TaxIntakePage: React.FC = () => {
                   {
                     step: '1',
                     icon: '📁',
-                    title: 'Upload Source Documents',
-                    desc: 'Invoices, CPR challans, Trial Balance, prior returns are uploaded in Accounting → File Intake & OCR.',
+                    title: 'Upload Source Documents (Central Document Intelligence)',
+                    desc: 'Invoices, CPR challans, Tax Returns, and Withholding Certificates are uploaded in Central Document Intelligence (or shared from Accounting).',
                   },
                   {
                     step: '2',
                     icon: '🔍',
-                    title: 'Agent 1 — Taxpayer Profile (This Screen)',
-                    desc: 'Scans client records & uploaded files. Verifies NTN, STRN, legal form, applicable FBR obligations. Identifies missing documents.',
+                    title: 'Agent 1 — Tax Intake & Profile (This Screen)',
+                    desc: 'Consumes centrally extracted documents. Verifies NTN/STRN, checks profile completeness, flags document conflicts for CA review, and prepares consolidated tax inputs.',
                   },
                   {
                     step: '3',

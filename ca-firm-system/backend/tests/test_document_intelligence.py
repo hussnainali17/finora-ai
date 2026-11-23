@@ -149,3 +149,67 @@ def test_document_intelligence_langgraph_flow():
     assert result["detected_category"] == "trial_balance"
     assert "accounting" in result["routing_targets"]
     assert "taxation_eligible" in result["routing_targets"]
+
+
+@pytest.mark.asyncio
+async def test_cross_module_share_document():
+    """Verify an existing document can be shared with another module without re-uploading."""
+    from unittest.mock import AsyncMock, MagicMock
+    from app.services.authz import Principal
+    from app.document_intelligence.service import share_document_with_module
+    from app.models.documents import Document
+
+    firm_id = uuid.uuid4()
+    client_id = uuid.uuid4()
+    period_id = uuid.uuid4()
+    doc_id = uuid.uuid4()
+    user_id = uuid.uuid4()
+
+    principal = Principal(
+        user_id=user_id,
+        firm_id=firm_id,
+        email="accountant@example.com",
+        full_name="Test Accountant",
+        role_key="accountant",
+        permissions=frozenset({"document:upload", "document:read", "client:access_all"}),
+        session_id=uuid.uuid4(),
+    )
+
+    doc = Document(
+        id=doc_id,
+        firm_id=firm_id,
+        client_id=client_id,
+        period_id=period_id,
+        module="accounting",
+        category="invoice",
+        original_filename="sales_invoice_001.pdf",
+        object_key="docs/sales_invoice_001.pdf",
+        sha256="a" * 64,
+        size_bytes=1024,
+        content_type="application/pdf",
+        uploaded_by=user_id,
+    )
+
+    session = AsyncMock()
+    session.add = MagicMock()
+    session.get.return_value = doc
+    session.scalar.return_value = None  # no existing reference
+
+    ref = await share_document_with_module(
+        session,
+        principal,
+        client_id,
+        period_id,
+        doc_id,
+        target_module="taxation",
+        target_category="sales_tax_return",
+        notes="Shared for sales tax reconciliation",
+    )
+
+    assert ref.document_id == doc_id
+    assert ref.module == "taxation"
+    assert ref.module_category == "sales_tax_return"
+    assert ref.is_primary is False
+    assert ref.shared_by == user_id
+    assert session.add.call_count == 2  # ref + audit event
+    session.commit.assert_awaited_once()

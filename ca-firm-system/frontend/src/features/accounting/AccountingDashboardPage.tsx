@@ -177,10 +177,10 @@ export const AccountingDashboardPage: React.FC = () => {
                 <CloudUploadIcon fontSize="large" />
               </Box>
               <Typography variant="h6" fontWeight="700" gutterBottom>
-                1. File Intake & OCR
+                1. Intake & Preparation (Agent 1)
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Upload source PDFs, spreadsheets, and bank statements. Extracts tables and checks data quality.
+                Consumes centrally extracted documents, categorizes transactions, maps to Chart of Accounts, flags duplicates & exceptions, and prepares structured inputs for Reconciliation.
               </Typography>
             </CardContent>
             <Box sx={{ p: 2, pt: 0 }}>
