@@ -4,6 +4,7 @@ import { useParams, useLocation } from 'react-router-dom';
 import { Sidebar } from '../navigation/Sidebar';
 import { Header } from '../navigation/Header';
 import { useWorkspace } from '../../features/workspace/WorkspaceContext';
+import { FloatingChatWidget } from '../../features/ca-review/FloatingChatWidget';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -58,6 +59,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           {children}
         </Box>
       </Box>
+
+      {/* Floating CA Review & AI Chat Button / Drawer */}
+      <FloatingChatWidget />
     </Box>
   );
 };

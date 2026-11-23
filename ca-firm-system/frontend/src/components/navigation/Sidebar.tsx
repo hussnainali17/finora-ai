@@ -37,6 +37,7 @@ import {
   Article as FilingIcon,
   Share as ShareIcon,
   Rule as ValidationIcon,
+  AutoAwesome as AutoAwesomeIcon,
   ExpandLess,
   ExpandMore,
 } from '@mui/icons-material';
@@ -694,6 +695,30 @@ export const Sidebar: React.FC = () => {
                 <ListItemText primary="Central Validation / Reports" primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 500 }} />
               </ListItemButton>
             </ListItem>
+
+            {/* CA Review & AI Chat */}
+            {(can('ca_review:read') || can('workflow:read') || can('review:read')) && (
+              <ListItem disablePadding sx={{ mb: 0.4 }}>
+                <ListItemButton
+                  onClick={() => handleNav(getWorkspacePath('ca-review'))}
+                  selected={location.pathname.includes('/ca-review')}
+                  sx={{
+                    borderRadius: '8px',
+                    py: 0.6,
+                    px: 1.5,
+                    color: location.pathname.includes('/ca-review') ? '#ffffff' : '#94a3b8',
+                    bgcolor: location.pathname.includes('/ca-review') ? 'rgba(99, 102, 241, 0.25)' : 'transparent',
+                    border: location.pathname.includes('/ca-review') ? '1px solid rgba(99, 102, 241, 0.5)' : '1px solid transparent',
+                    '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)', color: '#f8fafc' },
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 32, color: '#818cf8' }}>
+                    <AutoAwesomeIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary="CA Review & AI Chat" primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 600 }} />
+                </ListItemButton>
+              </ListItem>
+            )}
           </List>
         </Collapse>
 
