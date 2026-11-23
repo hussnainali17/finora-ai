@@ -142,12 +142,13 @@ async def answer_ca_question(
             "Rules:\n"
             "- Use actual numbers, accounts, and findings from the context.\n"
             "- Never invent figures or transactions.\n"
-            "- Keep your response professional, concise, structured in GitHub markdown.\n\n"
+            "- Keep your response professional, concise, structured in GitHub markdown.\n"
+            "- Provide actionable insights and observations beyond just restating numbers.\n\n"
             f"Context Summary:\n{summary}\n\n"
             f"CA Question: {user_message}\n\n"
             "Detailed Grounded Analysis:\n"
             f"{grounded_fallback}\n\n"
-            "Provide the final clear, structured response for the CA:"
+            "Provide the final clear, structured, and insightful response for the CA:"
         )
 
         res = await llm_gateway.complete(
@@ -155,9 +156,9 @@ async def answer_ca_question(
             agent="ca_review",
             task="chat",
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=800,
+            max_tokens=1500,
         )
         return res.text.strip()
     except Exception as exc:
-        logger.debug("LLM Q&A fallback to grounded response: %s", exc)
+        logger.warning("LLM Q&A call failed, using grounded fallback: %s", exc)
         return grounded_fallback
