@@ -28,9 +28,9 @@ model_list:
     litellm_params:
       model: gemini/gemini-2.5-flash
       api_key: os.environ/GEMINI_API_KEY
-  - model_name: gpt-6-luna
+  - model_name: hy4-flash
     litellm_params:
-      model: openai/gpt-6-luna          # CentAI model (OpenAI-compatible endpoint)
+      model: openai/hy4-flash:free          # CentAI free-tier model (OpenAI-compatible endpoint)
       api_base: https://api.cent-ai.dev/v1
       api_key: os.environ/CENT_AI_KEY
       drop_params: true

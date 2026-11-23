@@ -146,6 +146,18 @@ class WorkflowOrchestrator:
                     await self._emit_status(run)
                     return
 
+                # Accounting Agent 1: Accounting Intake & Preparation
+                from app.agents.intake_agent.agent import AccountingIntakePreparationAgent
+                intake_prep_agent = AccountingIntakePreparationAgent()
+                prep_result = await intake_prep_agent.execute_intake_preparation(
+                    session,
+                    firm_id=firm_id,
+                    client_id=client_id,
+                    period_id=period_id,
+                )
+                state["intake_record_id"] = prep_result.get("intake_record_id")
+                state["transactions_count"] = prep_result.get("transactions_count", 0)
+
                 state["data_quality_passed"] = True
                 run.current_step = "accounting_review"
 

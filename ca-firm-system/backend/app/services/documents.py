@@ -29,7 +29,7 @@ from app.core.errors import (
     UnsupportedMediaTypeError,
 )
 from app.integrations.storage.s3 import ObjectStore
-from app.models import AccountingPeriod, Document, User
+from app.models import AccountingPeriod, Document, DocumentModuleReference, User
 from app.services import uploads
 from app.services.audit import record_audit
 from app.services.authz import Principal, get_accessible_client, require_permission
@@ -115,6 +115,7 @@ async def upload_document(
     *,
     upload: UploadFile,
     category: str,
+    module: str = "accounting",
     scanner: uploads.FileScanner | None = None,
 ) -> Document:
     require_permission(principal, "document:upload")
@@ -179,12 +180,15 @@ async def upload_document(
         await store.put(key, spooled.file, content_type=content_type, sha256=spooled.sha256)
         stored = True
 
+        mod = module.lower().strip()
         doc = Document(
             id=doc_id,
             firm_id=principal.firm_id,
             client_id=client_id,
             period_id=period_id,
+            module=mod,
             category=category,
+            user_category=category,
             original_filename=filename,
             object_key=key,
             content_type=content_type,
@@ -193,6 +197,18 @@ async def upload_document(
             uploaded_by=principal.user_id,
         )
         session.add(doc)
+        ref = DocumentModuleReference(
+            id=uuid.uuid4(),
+            firm_id=principal.firm_id,
+            client_id=client_id,
+            period_id=period_id,
+            document_id=doc_id,
+            module=mod,
+            module_category=category,
+            is_primary=True,
+            status="active",
+        )
+        session.add(ref)
         try:
             await session.flush()
         except IntegrityError as exc:
@@ -272,6 +288,7 @@ async def list_documents(
     *,
     limit: int,
     offset: int,
+    module: str | None = None,
     category: str | None = None,
     status: str | None = None,
     q: str | None = None,
@@ -284,6 +301,20 @@ async def list_documents(
         Document.firm_id == principal.firm_id,
         Document.deleted_at.is_(None),
     ]
+    if module and module.lower().strip() != "all":
+        mod = module.lower().strip()
+        ref_subq = (
+            select(DocumentModuleReference.document_id)
+            .where(
+                DocumentModuleReference.firm_id == principal.firm_id,
+                DocumentModuleReference.client_id == client_id,
+                DocumentModuleReference.period_id == period_id,
+                DocumentModuleReference.module == mod,
+                DocumentModuleReference.status == "active",
+            )
+            .scalar_subquery()
+        )
+        where.append((Document.module == mod) | (Document.id.in_(ref_subq)))
     if category:
         where.append(Document.category == category)
     if status:

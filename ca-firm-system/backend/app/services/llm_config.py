@@ -263,6 +263,56 @@ async def set_agent_config(
     return policy.config_version
 
 
+async def set_global_default_model(
+    session: AsyncSession,
+    principal: Principal,
+    default_alias: str,
+    fallback_alias: str | None = None,
+) -> int:
+    """Set default model (and optional fallback) across all system agents simultaneously."""
+    require_permission(principal, "llm:manage")
+    default = MODELS.get(default_alias)
+    fallback = MODELS.get(fallback_alias) if fallback_alias else None
+    if default is None or (fallback_alias and fallback is None):
+        raise DomainValidationError("Only approved models can be selected")
+    if fallback_alias and fallback_alias == default_alias:
+        raise DomainValidationError("The fallback model must differ from the default model")
+
+    policy = await _policy(session, principal.firm_id, lock=True)
+    enabled = await enabled_aliases(session, principal.firm_id)
+
+    # Validate model is enabled and usable for every agent
+    for agent in AGENTS:
+        _require_usable_for_agent(default, agent, enabled, "default")
+        if fallback is not None:
+            _require_usable_for_agent(fallback, agent, enabled, "fallback")
+
+    existing_cfgs = await _agent_cfgs(session, principal.firm_id)
+    for agent in AGENTS:
+        cfg = existing_cfgs.get(agent)
+        if cfg is None:
+            cfg = LlmAgentConfig(firm_id=principal.firm_id, agent=agent, default_alias=default_alias)
+            session.add(cfg)
+        cfg.default_alias = default_alias
+        cfg.fallback_alias = fallback_alias
+        cfg.updated_by = principal.user_id
+
+    _bump(policy, principal)
+    record_audit(
+        session,
+        action="llm.global_default_set",
+        actor=principal,
+        target_type="llm_firm_policy",
+        metadata={
+            "default_alias": default_alias,
+            "fallback_alias": fallback_alias,
+            "config_version": policy.config_version,
+        },
+    )
+    await session.commit()
+    return policy.config_version
+
+
 # ----------------------------------------------------------------------------- task overrides
 
 

@@ -205,6 +205,12 @@ class LlmGateway:
             await self._log(res, firm_id, agent, task, client_id, user_id, failed, last_error)
             raise exc
 
+    # Reasoning models (like hy4-flash) consume tokens for internal thinking before producing
+    # the actual response.  We add a fixed overhead so the token budget is not exhausted before
+    # any visible content is generated.
+    _REASONING_OVERHEAD: int = 512
+    _REASONING_ALIASES: frozenset[str] = frozenset({"hy4-flash"})
+
     async def _attempt(
         self,
         model: ModelSpec,
@@ -213,13 +219,19 @@ class LlmGateway:
         agent: str,
         task: str,
     ) -> tuple[str, Usage, Decimal | None, str | None]:
+        # For reasoning models, pad max_tokens so internal thinking doesn't eat the full budget.
+        effective_max = (
+            max_tokens + self._REASONING_OVERHEAD
+            if model.alias in self._REASONING_ALIASES
+            else max_tokens
+        )
         body: dict[str, Any] = {
             "model": model.alias,
             "messages": messages,
-            "max_tokens": max_tokens,
+            "max_tokens": effective_max,
             "metadata": {"agent": agent, "task": task, "correlation_id": correlation_id_var.get()},
         }
-        if model.alias != "gpt-6-luna":
+        if model.alias not in ("gpt-6-luna", "hy4-flash"):
             body["temperature"] = 0
         headers = {**self._auth(), "X-Request-ID": correlation_id_var.get() or ""}
         try:
@@ -237,9 +249,20 @@ class LlmGateway:
             )
         try:
             data = r.json()
-            text = data["choices"][0]["message"]["content"]
+            msg = data["choices"][0]["message"]
+            text = msg.get("content") or ""
+            # Reasoning models (hy4-flash) may produce an empty `content` when all tokens were
+            # consumed by thinking.  Fall back to reasoning_content so the CA always gets a reply.
             if not isinstance(text, str) or not text.strip():
-                raise ValueError("empty")
+                reasoning = msg.get("reasoning_content") or ""
+                if isinstance(reasoning, str) and reasoning.strip():
+                    logger.debug(
+                        "model=%s returned empty content; using reasoning_content (%d chars)",
+                        model.alias, len(reasoning),
+                    )
+                    text = reasoning
+                else:
+                    raise ValueError("empty")
         except (ValueError, KeyError, IndexError, TypeError):
             raise _AttemptFailed("bad_response", fallback_ok=True, retryable=False) from None
         u = data.get("usage") if isinstance(data.get("usage"), dict) else {}

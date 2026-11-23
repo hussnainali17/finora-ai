@@ -3,6 +3,7 @@
 There is intentionally no ledger, journal or bookkeeping model anywhere in this product.
 """
 
+from app.models.accounting_intake import AccountingIntakeRecord
 from app.models.accounting_review import (
     ReconciliationSchedule,
     ReviewFinding,
@@ -10,7 +11,7 @@ from app.models.accounting_review import (
 )
 from app.models.adjustments import PeriodAdjustment
 from app.models.audit import AuditEvent
-from app.models.documents import Document, OutboxEvent
+from app.models.documents import Document, DocumentModuleReference, OutboxEvent
 from app.models.extraction import (
     DataQualityFinding,
     ExtractedColumn,
@@ -55,6 +56,7 @@ from app.models.taxation import (
 from app.models.workflows import WorkflowRun
 
 __all__ = [
+    "AccountingIntakeRecord",
     "AccountMapping",
     "AccountingPeriod",
     "ApprovedModuleOutput",
@@ -65,6 +67,7 @@ __all__ = [
     "Client",
     "DataQualityFinding",
     "Document",
+    "DocumentModuleReference",
     "ExtractedColumn",
     "ExtractedRow",
     "ExtractedTable",

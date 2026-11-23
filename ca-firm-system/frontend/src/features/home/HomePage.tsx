@@ -65,7 +65,7 @@ export default function HomePage(): React.JSX.Element {
 
   const getWorkspacePath = (sub: string) => {
     if (activeClient && activePeriod) {
-      if (sub === 'intake') return `/clients/${activeClient.id}/periods/${activePeriod.id}`;
+      if (sub === 'intake' || sub === 'documents') return `/clients/${activeClient.id}/periods/${activePeriod.id}/documents`;
       return `/clients/${activeClient.id}/periods/${activePeriod.id}/${sub}`;
     }
     return '/clients';
@@ -222,24 +222,26 @@ export default function HomePage(): React.JSX.Element {
               <Stack direction="row" spacing={1} flexWrap="wrap">
                 <Button
                   size="small"
-                  variant="outlined"
-                  onClick={() => navigate(getWorkspacePath('intake'))}
+                  variant="contained"
+                  color="info"
+                  startIcon={<CloudUploadIcon />}
+                  onClick={() => navigate(getWorkspacePath('documents'))}
                 >
-                  1. Intake
+                  Central Upload
                 </Button>
                 <Button
                   size="small"
                   variant="outlined"
-                  onClick={() => navigate(getWorkspacePath('review'))}
+                  onClick={() => navigate(getWorkspacePath('accounting'))}
                 >
-                  2. Review
+                  Accounting
                 </Button>
                 <Button
                   size="small"
                   variant="outlined"
-                  onClick={() => navigate(getWorkspacePath('adjustments'))}
+                  onClick={() => navigate(getWorkspacePath('taxation'))}
                 >
-                  3. Adjustments
+                  Taxation
                 </Button>
                 <Button
                   size="small"
@@ -247,7 +249,7 @@ export default function HomePage(): React.JSX.Element {
                   color="success"
                   onClick={() => navigate(getWorkspacePath('reports'))}
                 >
-                  4. Statements
+                  Statements
                 </Button>
               </Stack>
             </Stack>
@@ -295,14 +297,14 @@ export default function HomePage(): React.JSX.Element {
                   <Chip label="Agent 1" size="small" sx={{ bgcolor: '#e0f2fe', color: '#0369a1', fontWeight: 700 }} />
                 </Stack>
                 <Typography variant="subtitle1" fontWeight="700">
-                  File Intake & OCR
+                  Intake & Preparation
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ minHeight: 40, mt: 0.5 }}>
-                  Parses client invoices, ledgers, and trial balances with automated schema normalization.
+                  Categorizes transactions from centrally extracted documents, maps COA, and flags duplicates.
                 </Typography>
                 <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 2, color: '#0284c7' }}>
                   <Typography variant="button" sx={{ fontSize: '0.8rem', fontWeight: 700 }}>
-                    Upload Documents
+                    View Preparation
                   </Typography>
                   <ArrowForwardIcon sx={{ fontSize: 16 }} />
                 </Stack>

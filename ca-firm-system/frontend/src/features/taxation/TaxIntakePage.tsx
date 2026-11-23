@@ -44,7 +44,9 @@ import {
   ExpandLess as CollapseIcon,
   ArrowForward as ArrowIcon,
   AutoFixHigh as AutoIcon,
+  CloudUpload as CloudUploadIcon,
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { useWorkspace } from '../workspace/WorkspaceContext';
 import {
   createTaxEngagement,
@@ -84,6 +86,7 @@ const SEVERITY_COLOR: Record<string, string> = {
 };
 
 export const TaxIntakePage: React.FC = () => {
+  const navigate = useNavigate();
   const { activeClient, activePeriod } = useWorkspace();
   const [engagement, setEngagement] = useState<TaxEngagement | null>(null);
   const [profile, setProfile] = useState<TaxpayerProfile | null>(null);
@@ -202,9 +205,9 @@ export const TaxIntakePage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3, maxWidth: 1400, mx: 'auto' }}>
+    <Box sx={{ p: 3, maxWidth: 1400, mx: 'auto', overflowX: 'hidden', minWidth: 0 }}>
       {/* Header */}
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+      <Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={2} sx={{ mb: 3 }}>
         <Box>
           <Stack direction="row" spacing={1.5} alignItems="center">
             <Typography variant="h5" fontWeight="700" sx={{ color: '#0f766e' }}>
@@ -217,7 +220,16 @@ export const TaxIntakePage: React.FC = () => {
           </Typography>
         </Box>
 
-        <Stack direction="row" spacing={1.5}>
+        <Stack direction="row" spacing={1.5} flexWrap="wrap" justifyContent="flex-end">
+          <Button
+            variant="outlined"
+            startIcon={<CloudUploadIcon />}
+            onClick={() =>
+              navigate(`/clients/${activeClient.id}/periods/${activePeriod.id}/documents`)
+            }
+          >
+            Central Document Upload
+          </Button>
           <Tooltip title="Manually configure taxpayer details before execution">
             <Button
               variant="outlined"
@@ -262,14 +274,14 @@ export const TaxIntakePage: React.FC = () => {
                   {
                     step: '1',
                     icon: '📁',
-                    title: 'Upload Source Documents',
-                    desc: 'Invoices, CPR challans, Trial Balance, prior returns are uploaded in Accounting → File Intake & OCR.',
+                    title: 'Upload Source Documents (Central Document Intelligence)',
+                    desc: 'Invoices, CPR challans, Tax Returns, and Withholding Certificates are uploaded in Central Document Intelligence (or shared from Accounting).',
                   },
                   {
                     step: '2',
                     icon: '🔍',
-                    title: 'Agent 1 — Taxpayer Profile (This Screen)',
-                    desc: 'Scans client records & uploaded files. Verifies NTN, STRN, legal form, applicable FBR obligations. Identifies missing documents.',
+                    title: 'Agent 1 — Tax Intake & Profile (This Screen)',
+                    desc: 'Consumes centrally extracted documents. Verifies NTN/STRN, checks profile completeness, flags document conflicts for CA review, and prepares consolidated tax inputs.',
                   },
                   {
                     step: '3',

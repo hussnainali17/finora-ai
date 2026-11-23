@@ -6,8 +6,10 @@ from typing import Any
 
 from sqlalchemy import (
     BigInteger,
+    Boolean,
     CheckConstraint,
     DateTime,
+    Float,
     ForeignKeyConstraint,
     Index,
     Integer,
@@ -21,7 +23,10 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, created_at_col, updated_at_col, uuid_pk
 
-DOCUMENT_CATEGORIES = (
+MODULE_NAMES = ("accounting", "taxation", "audit", "general")
+
+# Accounting categories (Preserved exactly: 10 categories)
+ACCOUNTING_DOCUMENT_CATEGORIES = (
     "trial_balance",
     "general_ledger",
     "bank_statement",
@@ -32,6 +37,38 @@ DOCUMENT_CATEGORIES = (
     "inventory_report",
     "payroll_schedule",
     "other",
+)
+
+# Taxation categories (7 categories)
+TAXATION_DOCUMENT_CATEGORIES = (
+    "tax_return",
+    "withholding_certificate",
+    "sales_tax_return",
+    "tax_payment_challan",
+    "tax_notice",
+    "tax_exemption_certificate",
+    "tax_other",
+)
+
+# Audit categories (extensible)
+AUDIT_DOCUMENT_CATEGORIES = (
+    "audit_engagement_letter",
+    "management_representation",
+    "audit_confirmation",
+    "sampling_evidence",
+    "audit_other",
+)
+
+# All valid categories across modules
+DOCUMENT_CATEGORIES = tuple(
+    sorted(
+        set(
+            ACCOUNTING_DOCUMENT_CATEGORIES
+            + TAXATION_DOCUMENT_CATEGORIES
+            + AUDIT_DOCUMENT_CATEGORIES
+            + ("other",)
+        )
+    )
 )
 DOCUMENT_STATUSES = ("uploaded", "queued", "processing", "processed", "failed")
 
@@ -69,6 +106,7 @@ class Document(Base):
         # Target for extraction_runs' (document_id, client_id) foreign key.
         UniqueConstraint("id", "client_id", name="uq_documents_id_client_id"),
         CheckConstraint(f"category IN ({_in(DOCUMENT_CATEGORIES)})", name="category_valid"),
+        CheckConstraint(f"module IN ({_in(MODULE_NAMES)})", name="module_valid"),
         CheckConstraint(f"status IN ({_in(DOCUMENT_STATUSES)})", name="status_valid"),
         CheckConstraint("size_bytes > 0", name="size_positive"),
         CheckConstraint("char_length(sha256) = 64", name="sha256_len"),
@@ -83,13 +121,23 @@ class Document(Base):
         ),
         Index("ix_documents_period_id_created_at", "period_id", "created_at"),
         Index("ix_documents_firm_id", "firm_id"),
+        Index("ix_documents_module", "firm_id", "client_id", "period_id", "module"),
     )
 
     id: Mapped[uuid.UUID] = uuid_pk()
     firm_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     client_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
     period_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
-    category: Mapped[str] = mapped_column(String(32), nullable=False)
+    module: Mapped[str] = mapped_column(
+        String(32), nullable=False, default="accounting", server_default="accounting"
+    )
+    category: Mapped[str] = mapped_column(String(64), nullable=False)
+    user_category: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    detected_category: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    category_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
+    category_mismatch: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
     original_filename: Mapped[str] = mapped_column(String(255), nullable=False)
     object_key: Mapped[str] = mapped_column(String(512), nullable=False)
     content_type: Mapped[str] = mapped_column(String(150), nullable=False)
@@ -103,6 +151,39 @@ class Document(Base):
     updated_at: Mapped[datetime] = updated_at_col()
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     deleted_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+
+
+class DocumentModuleReference(Base):
+    """Enables a single central document to be referenced by multiple modules
+    (e.g., an invoice referenced by Accounting for ledger entries and Taxation for withholding/sales tax).
+    """
+
+    __tablename__ = "document_module_references"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["document_id", "client_id"],
+            ["documents.id", "documents.client_id"],
+            name="fk_doc_module_ref_document_client",
+            ondelete="CASCADE",
+        ),
+        UniqueConstraint("document_id", "module", name="uq_document_module_reference"),
+        CheckConstraint(f"module IN ({_in(MODULE_NAMES)})", name="doc_ref_module_valid"),
+        Index("ix_doc_module_ref_module", "firm_id", "client_id", "period_id", "module"),
+    )
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    firm_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    client_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    period_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    document_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    module: Mapped[str] = mapped_column(String(32), nullable=False)
+    module_category: Mapped[str] = mapped_column(String(64), nullable=False)
+    is_primary: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default="false")
+    status: Mapped[str] = mapped_column(String(24), nullable=False, default="active", server_default="active")
+    notes: Mapped[str | None] = mapped_column(Text)
+    shared_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    created_at: Mapped[datetime] = created_at_col()
+    updated_at: Mapped[datetime] = updated_at_col()
 
 
 class OutboxEvent(Base):

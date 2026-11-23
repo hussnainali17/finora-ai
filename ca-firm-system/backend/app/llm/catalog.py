@@ -62,7 +62,7 @@ MODELS: Final[dict[str, ModelSpec]] = {
             1_000_000, frozenset({CAP_STRUCTURED, CAP_TOOLS}), "economy",
         ),
         ModelSpec(
-            "gpt-6-luna", "GPT-6 Luna (Free)", "CentAI",
+            "hy4-flash", "HY4 Flash (Free)", "CentAI",
             "Free-tier model via CentAI gateway — used for CA Review chat, intent classification and all agent tasks.",
             128_000, frozenset({CAP_STRUCTURED, CAP_TOOLS}), "economy",
         ),
@@ -95,22 +95,22 @@ TASKS: Final[dict[str, TaskSpec]] = {
         TaskSpec(
             "ca_review", "chat",
             "Conversational Q&A grounded in project source data, reconciliations and reports.",
-            frozenset({CAP_STRUCTURED}), 32_000, 2048,
+            frozenset({CAP_STRUCTURED}), 32_000, 3072,
         ),
         TaskSpec(
             "ca_review", "classify_intent",
             "Classify CA review intent (question, error_report, correction_request, instruction).",
-            frozenset({CAP_STRUCTURED}), 8_000, 512,
+            frozenset({CAP_STRUCTURED}), 8_000, 1024,
         ),
         TaskSpec(
             "ca_review", "proposal",
             "Generate structured correction proposals with diffs and downstream re-execution plans.",
-            frozenset({CAP_STRUCTURED}), 16_000, 1024,
+            frozenset({CAP_STRUCTURED}), 16_000, 2048,
         ),
         TaskSpec(
             "ca_review", "instruction",
             "Interpret and route CA directives across accounting, audit, and adjustments agents.",
-            frozenset({CAP_STRUCTURED}), 16_000, 1024,
+            frozenset({CAP_STRUCTURED}), 16_000, 2048,
         ),
     )
 }  # fmt: skip
@@ -118,11 +118,11 @@ TASKS: Final[dict[str, TaskSpec]] = {
 
 # Used only to pre-fill choices; a firm still has to ENABLE a model before anything is sent to it.
 SUGGESTED_DEFAULTS: Final[dict[str, str]] = {
-    "intake": "gpt-6-luna",
-    "accounting_review": "gpt-6-luna",
-    "adjustments": "gpt-6-luna",
-    "reporting": "gpt-6-luna",
-    "ca_review": "gpt-6-luna",
+    "intake": "hy4-flash",
+    "accounting_review": "hy4-flash",
+    "adjustments": "hy4-flash",
+    "reporting": "hy4-flash",
+    "ca_review": "hy4-flash",
 }
 
 

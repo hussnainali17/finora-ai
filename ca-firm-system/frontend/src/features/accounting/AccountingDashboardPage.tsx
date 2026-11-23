@@ -86,6 +86,13 @@ export const AccountingDashboardPage: React.FC = () => {
 
         <Stack direction="row" spacing={2}>
           <Button
+            variant="outlined"
+            startIcon={<CloudUploadIcon />}
+            onClick={() => navigate(`${basePath}/documents`)}
+          >
+            Central Document Upload
+          </Button>
+          <Button
             variant="contained"
             color="primary"
             startIcon={<HubIcon />}
@@ -177,20 +184,20 @@ export const AccountingDashboardPage: React.FC = () => {
                 <CloudUploadIcon fontSize="large" />
               </Box>
               <Typography variant="h6" fontWeight="700" gutterBottom>
-                1. File Intake & OCR
+                1. Intake & Preparation
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Upload source PDFs, spreadsheets, and bank statements. Extracts tables and checks data quality.
+                Consumes centrally extracted documents, categorizes transactions, maps to Chart of Accounts, flags duplicates & exceptions, and prepares structured inputs for Reconciliation.
               </Typography>
             </CardContent>
             <Box sx={{ p: 2, pt: 0 }}>
               <Button
-                variant="text"
+                variant="outlined"
                 fullWidth
                 endIcon={<ArrowForwardIcon />}
-                onClick={() => navigate(`${basePath}`)}
+                onClick={() => navigate(`${basePath}/documents`)}
               >
-                Open Intake
+                Upload & Ingestion
               </Button>
             </Box>
           </Card>

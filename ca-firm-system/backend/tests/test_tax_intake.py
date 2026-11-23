@@ -13,6 +13,7 @@ from app.agents.tax_intake_agent.profile_builder import (
     validate_ntn,
     validate_strn,
 )
+from app.models.documents import Document
 from app.models.identity import Client
 from app.models.taxation import TaxEngagement, TaxpayerProfile
 
@@ -140,3 +141,92 @@ async def test_agent1_intake_execution() -> None:
     assert result["taxpayer_profile"]["ntn"] == "7654321-0"
     assert len(result["obligations"]) > 0
     assert mock_engagement.status == "data_gathering"
+    assert result["consolidated_tax_inputs"]["ready_for_tax_data_agent"] is True
+
+
+@pytest.mark.asyncio
+async def test_agent1_conflict_detection_preserves_verified_profile() -> None:
+    """Verify that Tax Agent 1 detects discrepancies between extracted documents and
+    verified taxpayer profiles, and does NOT blindly overwrite verified attributes.
+    """
+    session = AsyncMock(spec=AsyncSession)
+    engagement_id = uuid.uuid4()
+    client_id = uuid.uuid4()
+    firm_id = uuid.uuid4()
+    period_id = uuid.uuid4()
+
+    mock_engagement = TaxEngagement(
+        id=engagement_id,
+        firm_id=firm_id,
+        client_id=client_id,
+        period_id=period_id,
+        tax_year=2024,
+        tax_period_label="TY2024",
+        tax_type="composite",
+        status="draft",
+    )
+    mock_client = Client(id=client_id, firm_id=firm_id, name="Test Client")
+
+    # Existing verified profile with NTN 1234567-8
+    verified_profile = TaxpayerProfile(
+        id=uuid.uuid4(),
+        firm_id=firm_id,
+        client_id=client_id,
+        engagement_id=engagement_id,
+        version=1,
+        legal_form="private_company",
+        ntn="1234567-8",
+        strn="12-34-5678-901-00",
+        principal_activity="Trading",
+        business_sector="Commercial",
+        registered_branches=[],
+        jurisdictions=["Federal"],
+        applicable_obligations=[],
+        missing_information=[],
+    )
+
+    session.get.side_effect = lambda model, obj_id: {
+        TaxEngagement: mock_engagement if obj_id == engagement_id else None,
+        Client: mock_client if obj_id == client_id else None,
+    }.get(model)
+
+    # Document mock with extracted row having a conflicting NTN 9999999-9
+    doc = MagicMock(spec=Document)
+    doc.id = uuid.uuid4()
+    doc.category = "withholding_certificate"
+    doc.original_filename = "CPR_Challan.pdf"
+    doc.created_at = None
+
+    tbl = MagicMock()
+    tbl.id = uuid.uuid4()
+    tbl.name = "Withholding_Table"
+
+    row = MagicMock()
+    row.normalized = {
+        "reference": "CPR-2024-001",
+        "ntn": "9999999-9",  # Conflicting NTN!
+        "amount": "25000.00",
+    }
+
+    # Setup side effects for session.scalars calls:
+    # 1. Documents query -> [doc]
+    # 2. ExtractedTable query -> [tbl]
+    # 3. ExtractedRow query -> [row]
+    # 4. Existing profile query -> verified_profile
+    res1 = MagicMock(); res1.all.return_value = [doc]
+    res2 = MagicMock(); res2.all.return_value = [tbl]
+    res3 = MagicMock(); res3.all.return_value = [row]
+    res4 = MagicMock(); res4.first.return_value = verified_profile
+
+    session.scalars.side_effect = [res1, res2, res3, res4]
+
+    agent = TaxIntakeAgent()
+    result = await agent.execute_intake(session, engagement_id=engagement_id)
+
+    # Verified profile NTN must be PRESERVED (NOT overwritten by 9999999-9)
+    assert result["taxpayer_profile"]["ntn"] == "1234567-8"
+    assert len(result["conflicts"]) == 1
+    assert result["conflicts"][0]["field"] == "ntn"
+    assert result["conflicts"][0]["extracted_value"] == "9999999-9"
+    assert "conflict_ntn" in [m.get("item_id") for m in result["missing_information"]]
+
