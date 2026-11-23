@@ -23,6 +23,7 @@ import {
   getAgents,
   listModels,
   setAgentConfig,
+  setGlobalDefaultModel,
   setModelEnabled,
   setPolicy,
   setTaskOverride,
@@ -136,6 +137,25 @@ export default function ModelSettingsPage() {
             ))}
           </TableBody>
         </Table>
+      </Paper>
+
+      <Paper variant="outlined" sx={{ p: 2.5, backgroundColor: 'background.paper' }}>
+        <Typography variant="h6" component="h3" gutterBottom>
+          Global default model
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Choose a primary model that will be applied as the default across all agents (Intake, Accounting Review, Adjustments, Reporting, CA Review).
+        </Typography>
+        <GlobalDefaultSelector
+          models={models}
+          manage={manage}
+          onApply={(alias, fallback) =>
+            act(
+              () => setGlobalDefaultModel(alias, fallback),
+              `Global default model updated to ${label(models, alias)} across all agents`,
+            )
+          }
+        />
       </Paper>
 
       <Box>
@@ -303,6 +323,82 @@ function ModelRow({
         </TableCell>
       )}
     </TableRow>
+  );
+}
+
+function GlobalDefaultSelector({
+  models,
+  manage,
+  onApply,
+}: {
+  models: LlmModels;
+  manage: boolean;
+  onApply: (alias: string, fallback: string | null) => void;
+}) {
+  const enabledModels = models.models.filter((m) => m.enabled);
+  const [selectedDefault, setSelectedDefault] = useState(
+    enabledModels.find((m) => m.alias === 'hy4-flash')?.alias ?? enabledModels[0]?.alias ?? NONE,
+  );
+  const [selectedFallback, setSelectedFallback] = useState(NONE);
+
+  const fallbackOpts = enabledModels.filter((m) => m.alias !== selectedDefault);
+
+  return (
+    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="flex-start">
+      <TextField
+        select
+        size="small"
+        sx={{ minWidth: 260 }}
+        label="Select Global Default Model"
+        value={selectedDefault}
+        disabled={!manage || enabledModels.length === 0}
+        onChange={(e) => {
+          setSelectedDefault(e.target.value);
+          if (selectedFallback === e.target.value) {
+            setSelectedFallback(NONE);
+          }
+        }}
+        helperText={enabledModels.length === 0 ? 'Enable at least one model in the table above' : ''}
+      >
+        {enabledModels.length === 0 ? (
+          <MenuItem value={NONE}>No models enabled</MenuItem>
+        ) : (
+          enabledModels.map((m) => (
+            <MenuItem key={m.alias} value={m.alias}>
+              {m.display_name} ({m.provider})
+            </MenuItem>
+          ))
+        )}
+      </TextField>
+
+      <TextField
+        select
+        size="small"
+        sx={{ minWidth: 240 }}
+        label="Global Fallback Model (Optional)"
+        value={selectedFallback}
+        disabled={!manage || selectedDefault === NONE || fallbackOpts.length === 0}
+        onChange={(e) => setSelectedFallback(e.target.value)}
+      >
+        <MenuItem value={NONE}>None</MenuItem>
+        {fallbackOpts.map((m) => (
+          <MenuItem key={m.alias} value={m.alias}>
+            {m.display_name} ({m.provider})
+          </MenuItem>
+        ))}
+      </TextField>
+
+      {manage && (
+        <Button
+          variant="contained"
+          disabled={selectedDefault === NONE}
+          onClick={() => onApply(selectedDefault, selectedFallback === NONE ? null : selectedFallback)}
+          sx={{ height: 40 }}
+        >
+          Set as Default for All Agents
+        </Button>
+      )}
+    </Stack>
   );
 }
 

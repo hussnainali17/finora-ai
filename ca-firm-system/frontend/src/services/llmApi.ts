@@ -12,6 +12,14 @@ export const setModelEnabled = (alias: string, enabled: boolean) =>
 export const testModel = (alias: string) =>
   apiFetch<LlmTestResult>(`/llm/models/${alias}/test`, { method: 'POST' });
 export const getAgents = () => apiFetch<LlmAgents>('/llm/agents');
+export const setGlobalDefaultModel = (
+  default_alias: string,
+  fallback_alias: string | null = null,
+) =>
+  apiFetch<{ config_version: number }>(
+    '/llm/global-default',
+    json('PUT', { default_alias, fallback_alias }),
+  );
 export const setAgentConfig = (
   agent: string,
   default_alias: string,

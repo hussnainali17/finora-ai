@@ -205,9 +205,9 @@ export const TaxIntakePage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3, maxWidth: 1400, mx: 'auto' }}>
+    <Box sx={{ p: 3, maxWidth: 1400, mx: 'auto', overflowX: 'hidden', minWidth: 0 }}>
       {/* Header */}
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+      <Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={2} sx={{ mb: 3 }}>
         <Box>
           <Stack direction="row" spacing={1.5} alignItems="center">
             <Typography variant="h5" fontWeight="700" sx={{ color: '#0f766e' }}>
@@ -220,7 +220,7 @@ export const TaxIntakePage: React.FC = () => {
           </Typography>
         </Box>
 
-        <Stack direction="row" spacing={1.5}>
+        <Stack direction="row" spacing={1.5} flexWrap="wrap" justifyContent="flex-end">
           <Button
             variant="outlined"
             startIcon={<CloudUploadIcon />}

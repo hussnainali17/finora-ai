@@ -385,7 +385,7 @@ export const Sidebar: React.FC = () => {
               </ListItemButton>
             </ListItem>
 
-            {/* Agent 1: Intake & Preparation */}
+            {/* Intake & Preparation */}
             <ListItem disablePadding sx={{ mb: 0.4 }}>
               <ListItemButton
                 onClick={() => handleNav(getWorkspacePath('accounting', 'intake'))}
@@ -404,7 +404,7 @@ export const Sidebar: React.FC = () => {
                   <FactCheckIcon fontSize="small" />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Agent 1: Intake & Preparation"
+                  primary="Intake & Preparation"
                   secondary="COA Mapping, Duplicates & Completeness"
                   primaryTypographyProps={{ fontSize: '0.8rem', fontWeight: 500 }}
                   secondaryTypographyProps={{ fontSize: '0.65rem', color: '#64748b' }}

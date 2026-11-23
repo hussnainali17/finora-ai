@@ -334,7 +334,7 @@ export default function DocumentsPage() {
   const mismatchCount = (data?.items || []).filter((item) => item.category_mismatch).length;
 
   return (
-    <Stack spacing={3}>
+    <Stack spacing={3} sx={{ overflowX: 'hidden', minWidth: 0 }}>
       <Breadcrumbs>
         <Link component={RouterLink} to="/clients" underline="hover">
           Clients
@@ -350,7 +350,7 @@ export default function DocumentsPage() {
 
       {/* Period Header */}
       <Paper sx={{ p: 3 }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap">
+        <Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={2}>
           <Box>
             <Stack direction="row" spacing={1.5} alignItems="center">
               <Typography variant="h5" component="h2" fontWeight="700">
@@ -558,7 +558,7 @@ export default function DocumentsPage() {
 
       {/* Module-Specific Document Lists & Filter Tabs */}
       <Paper sx={{ p: 3 }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap">
+        <Stack direction="row" justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={2}>
           <Tabs
             value={activeTab}
             onChange={(_, val) => {
@@ -614,6 +614,7 @@ export default function DocumentsPage() {
 
         {data && displayedItems.length > 0 && (
           <>
+            <Box sx={{ overflowX: 'auto', width: '100%' }}>
             <Table size="small" aria-label="Documents">
               <TableHead>
                 <TableRow>
@@ -723,6 +724,7 @@ export default function DocumentsPage() {
                 ))}
               </TableBody>
             </Table>
+            </Box>
             <TablePagination
               component="div"
               count={data.total}

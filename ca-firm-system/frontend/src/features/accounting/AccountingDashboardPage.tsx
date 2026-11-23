@@ -184,7 +184,7 @@ export const AccountingDashboardPage: React.FC = () => {
                 <CloudUploadIcon fontSize="large" />
               </Box>
               <Typography variant="h6" fontWeight="700" gutterBottom>
-                1. Intake & Preparation (Agent 1)
+                1. Intake & Preparation
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 Consumes centrally extracted documents, categorizes transactions, maps to Chart of Accounts, flags duplicates & exceptions, and prepares structured inputs for Reconciliation.

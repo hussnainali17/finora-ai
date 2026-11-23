@@ -15,6 +15,7 @@ from app.schemas.llm import (
     AgentOut,
     AgentsOut,
     EnableIn,
+    GlobalDefaultIn,
     ModelOut,
     ModelsOut,
     ModelTestOut,
@@ -114,6 +115,16 @@ async def get_agents(principal: PrincipalDep, session: SessionDep) -> AgentsOut:
         ],
         allow_task_overrides=allow, config_version=version,
     )  # fmt: skip
+
+
+@router.put("/global-default", response_model=VersionOut)
+async def set_global_default(
+    body: GlobalDefaultIn, principal: PrincipalDep, session: SessionDep
+) -> VersionOut:
+    v = await svc.set_global_default_model(
+        session, principal, body.default_alias, body.fallback_alias
+    )
+    return VersionOut(config_version=v)
 
 
 @router.put("/agents/{agent}", response_model=VersionOut)

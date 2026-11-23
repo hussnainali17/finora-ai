@@ -41,6 +41,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           display: 'flex',
           flexDirection: 'column',
           minWidth: 0,
+          overflow: 'hidden',
           bgcolor: '#f8fafc',
         }}
       >
@@ -54,6 +55,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
             maxWidth: '1600px',
             width: '100%',
             mx: 'auto',
+            overflowX: 'hidden',
           }}
         >
           {children}

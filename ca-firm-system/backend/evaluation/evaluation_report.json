@@ -1,15 +1,15 @@
 {
-  "model_evaluator": "gpt-6-luna",
-  "gateway_url": "http://127.0.0.1:4000",
-  "timestamp": "2026-11-21 17:42:18",
+  "model_evaluator": "hy4-flash:free",
+  "gateway_url": "https://api.cent-ai.dev/v1",
+  "timestamp": "2026-11-22 21:20:19",
   "token_usage": {
     "total_calls": 12,
     "successful_calls": 12,
     "failed_calls": 0,
-    "prompt_tokens": 3888,
-    "completion_tokens": 4098,
-    "total_tokens": 7986,
-    "cost_usd": "0.000510751"
+    "prompt_tokens": 2729,
+    "completion_tokens": 6900,
+    "total_tokens": 9629,
+    "cost_usd": "0E-9"
   },
   "datasets_evaluated": 9,
   "results": [
@@ -23,10 +23,10 @@
       "accuracy_pct": 100.0,
       "llm_eval": {
         "relevance": 0.9,
-        "faithfulness": 1.0,
-        "actionability": 0.3,
-        "overall_score": 0.82,
-        "feedback": "Accurately summarizes the clean reconciliation and matched totals without unsupported claims. It could briefly note that no corrective action is required, while recommending retention of reconciliation support and appropriate review/approval documentation."
+        "faithfulness": 0.9,
+        "actionability": 0.85,
+        "overall_score": 0.88,
+        "feedback": "We need answer only JSON. Need evaluate provided \"Agent Explanation\" as an accounting explanation. Need understand context. Finding: bank_reconciliati"
       }
     },
     {
@@ -53,11 +53,11 @@
       "expected_findings": ">=5",
       "accuracy_pct": 100.0,
       "llm_eval": {
-        "relevance": 0.95,
-        "faithfulness": 0.98,
-        "actionability": 0.84,
-        "overall_score": 0.92,
-        "feedback": "Directly addresses the missing date and its impact on identification, period assignment, and verification without inventing facts. Remediation is appropriate, though it could be stronger by specifying validation against supporting source documents and preserving an audit trail."
+        "relevance": 0.9,
+        "faithfulness": 0.9,
+        "actionability": 0.85,
+        "overall_score": 0.88,
+        "feedback": "We need answer user. Need produce final JSON only. Need evaluate \"Agent Explanation\" shown: It's not an explanation to client; it's meta reasoning: \"W"
       }
     },
     {
@@ -84,11 +84,11 @@
       "expected_findings": ">=4",
       "accuracy_pct": 100.0,
       "llm_eval": {
-        "relevance": 0.95,
-        "faithfulness": 0.93,
-        "actionability": 0.92,
-        "overall_score": 0.93,
-        "feedback": "Strong and directly relevant explanation. It accurately identifies over-depreciation or posting errors, explains IAS 16 implications, and provides appropriate investigation and IAS 8 remediation steps. Minor limitation: the underlying cause is unverified, and the explanation could distinguish more explicitly between correcting depreciation, impairment, disposal, and opening-balance errors."
+        "relevance": 0.9,
+        "faithfulness": 0.9,
+        "actionability": 0.85,
+        "overall_score": 0.88,
+        "feedback": "We need answer only JSON. Need evaluate given \"Agent Explanation\". Need score metrics. Need act as senior CA evaluator. Need parse context and agent e"
       }
     },
     {
@@ -116,10 +116,10 @@
       "accuracy_pct": 100.0,
       "llm_eval": {
         "relevance": 0.9,
-        "faithfulness": 0.45,
-        "actionability": 0.72,
-        "overall_score": 0.67,
-        "feedback": "Clearly explains the imbalance and its impact on financial reporting, with sensible remediation steps. However, the stated debit and credit totals and the claim that one row lacks an account code are not supported by the finding provided, reducing factual faithfulness. Actions are appropriate but remain general and do not specifically reference IAS/IFRS requirements or detailed reconciliation procedures."
+        "faithfulness": 0.9,
+        "actionability": 0.85,
+        "overall_score": 0.88,
+        "feedback": "We need answer user asks evaluate accounting explanation. Need score metrics 0-1 and return only JSON. Need reason. Need formulate scores.\n\nWe need ev"
       }
     },
     {
@@ -131,11 +131,11 @@
       "expected_findings": ">=2",
       "accuracy_pct": 100.0,
       "llm_eval": {
-        "relevance": 0.98,
-        "faithfulness": 0.94,
-        "actionability": 0.97,
-        "overall_score": 0.96,
-        "feedback": "Strong, relevant assessment that correctly highlights both ECL and fundamental existence/validity risks, with practical IFRS-aligned procedures. Minor technical imprecision: the 90-day presumption indicates default but does not automatically establish credit impairment, and Stage 3 terminology is not applicable to receivables accounted for under the simplified approach."
+        "relevance": 0.9,
+        "faithfulness": 0.9,
+        "actionability": 0.85,
+        "overall_score": 0.88,
+        "feedback": "We need answer only JSON object. Need evaluate given \"Agent Explanation\". Need be senior CA evaluator. Need score 0-1 metrics. Need understand prompt:"
       }
     },
     {
@@ -147,11 +147,11 @@
       "expected_findings": ">=3",
       "accuracy_pct": 100.0,
       "llm_eval": {
-        "relevance": 0.98,
-        "faithfulness": 0.96,
-        "actionability": 0.97,
-        "overall_score": 0.97,
-        "feedback": "Directly addresses the missing supplier reference, explains relevant AP risks, avoids inventing amounts, and provides comprehensive, practical remediation. Some statements assume the row is an invoice/AP transaction, but this is a reasonable contextual inference rather than a material hallucination."
+        "relevance": 0.9,
+        "faithfulness": 0.9,
+        "actionability": 0.85,
+        "overall_score": 0.88,
+        "feedback": "We need answer only JSON. Need evaluate given accounting explanation. Need think carefully. User asks score explanation. We are senior CA evaluator. N"
       }
     }
   ]

@@ -63,6 +63,11 @@ class AgentConfigIn(StrictModel):
     fallback_alias: str | None = Field(default=None, max_length=64)
 
 
+class GlobalDefaultIn(StrictModel):
+    default_alias: str = Field(min_length=1, max_length=64)
+    fallback_alias: str | None = Field(default=None, max_length=64)
+
+
 class TaskOverrideIn(StrictModel):
     alias: str = Field(min_length=1, max_length=64)
 
